@@ -11,6 +11,16 @@
 #'     fig_height: 9
 #' ---
 #' 
+#' # Description
+#' This script pulls data from separate files in the **Database** folder, adds
+#' a few new variables, and checks data for consistency. This script will be 
+#' called from other analysis scripts so that the ETL process isn't repeated, 
+#' making the analysis scripts a little shorter.
+#' 
+#' ## Pre-cleaning
+#+ cleaning,message=FALSE
+rm(list = ls()) 
+#' 
 #' # Package and library installation
 #' Note that messages and code are often hidden in this notebook for brevity.
 # Package and library installation
@@ -23,3 +33,30 @@ if (any(! packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
+#'
+#' # Data
+#' - Data are extracted from the associated directory and loaded into a list.
+#' - The `resistance_class` variable is synthesized and added to several tables
+#+ data,echo=TRUE,results=TRUE
+{
+  fpaths <-
+    list.files(paste0(getwd(), "/Database"), full.names = TRUE)
+  fnames <-
+    gsub(".csv", "", list.files(paste0(getwd(), "/Database"), full.names = FALSE))
+  data <-
+    lapply(fpaths, function(x)
+      read_csv(x, show_col_types = FALSE))
+  names(data) <- fnames
+  # Assign resistance classes to families in `terpene`, `terpene_meta` and `tree_meta`:
+  assign_resistance <- function(x) {
+    x %<>% 
+      mutate(resistance_class = case_when(
+        family %in% c("ENDO-155", "ENDO-157", "ENDO-158") ~ "QDR",
+        family %in% c("ENDO-159", "ENDO-160") ~ "susceptible",
+        TRUE ~ "MGR"))
+  }
+  data$terpene %<>% assign_resistance()
+  data$terpene_meta %<>% assign_resistance()
+  data$tree_meta %<>% assign_resistance()
+}
+
