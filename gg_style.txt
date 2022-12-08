@@ -1,0 +1,61 @@
+# Theme BGL
+# ————————————————————
+
+theme_bgl = 
+  theme_classic() +
+  theme(
+    text = element_text(
+    family = "serif"
+    ),
+    axis.title = element_text(
+      size = 12
+    ),
+    axis.text.x = element_text(
+      size = 9,
+      family = "serif",
+      margin = unit(c(
+        t = 2,
+        r = 0,
+        b = 4,
+        l = 0
+      ), "mm")
+    ),
+    axis.text.y = element_text(
+      size = 9,
+      family = "serif",
+      margin = unit(c(
+        t = 0,
+        r = 2,
+        b = 0,
+        l = 3
+      ), "mm")
+    ),
+    axis.ticks.length = unit(-2, "mm"),
+    strip.text = element_text(
+      size = 12,
+      family = "serif",
+      face = 2
+    ),
+    plot.caption = element_text(
+      size = 8,
+      family = "serif"
+    ),
+    plot.title = element_text(
+      size = 14,
+      family = "serif",
+      face = 2
+    ),
+    legend.text = element_text(
+      size = 10,
+      family = "serif",
+      face = 1
+    ),
+    legend.title = element_text(
+      size = 10,
+      family = "serif",
+      face = 1
+    ),
+    legend.position = "right",
+    panel.grid = element_blank()
+  ) 
+
