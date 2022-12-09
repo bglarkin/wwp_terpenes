@@ -64,18 +64,18 @@ for (i in 1:length(packages_needed)) {
 #' ### `terpene_meta`
 #' Experimental design and metadata on trees that had terpenes extracted. Useful for an **env** explanatory
 #' file to go along with a distance matrix produced from `terpene`.
-data$terpene_meta %>% glimpse()
+data[1]
 #' ### `terpene`
 #' Granular terpene masses extracted from a subset of experimental seedlings. Also includes experimental
 #' design and metadata for convenience. Normally, only dry weights of terpenes are used in analysis,
 #' but wet weights are also included here. 
-data$terpene %>% glimpse()
+data[2]
 #' ### `tree_height`
 #' Only applicable height measurements are included here to simplify use of height data in correlations.
-data$tree_height %>% glimpse()
+data[3]
 #' ### `tree_meta`
 #' Experimental design and metadata on all trees (not just those that had terpenes extracted).
-data$tree_meta %>% glimpse()
+data[4]
 #' ### `tree_rust_response`
 #' Disease response traits on all seedlings.
-data$tree_rust_response %>% glimpse()
+data[5]

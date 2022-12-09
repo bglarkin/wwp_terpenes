@@ -45,10 +45,10 @@ if (any(! packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
-# Load ggplot styles and themes from text file
 ```
 
 ``` r
+# Load ggplot styles and themes from text file
 source("gg_style.txt")
 ```
 
@@ -56,25 +56,64 @@ source("gg_style.txt")
 
 See
 [data_etl.md](https://github.com/bglarkin/wwp_terpenes/blob/main/data_etl.md)
-for a brief data dictionary. Names only provided here.
+for more description of the source data. Header views of each data table
+are presented here. Names only provided here.
 
 ``` r
 source("data_etl.R")
 ```
 
 ``` r
-names(data)
+sapply(data, function(x) head(x, 2))
 ```
 
-    ## [1] "terpene_meta"       "terpene"            "tree_height"       
-    ## [4] "tree_meta"          "tree_rust_response"
+    ## $terpene_meta
+    ## # A tibble: 2 × 7
+    ##   tree_ID  year treatment assessment block family   resistance_class
+    ##     <dbl> <dbl> <chr>     <chr>      <dbl> <chr>    <chr>           
+    ## 1    1002  2019 FFE       pre_rust       1 ENDO-159 susceptible     
+    ## 2    1003  2019 FFE       pre_rust       1 ENDO-159 susceptible     
+    ## 
+    ## $terpene
+    ## # A tibble: 2 × 11
+    ##   tree_ID  year treat…¹ asses…² block family class compo…³ mass_…⁴  mass resis…⁵
+    ##     <dbl> <dbl> <chr>   <chr>   <dbl> <chr>  <chr> <chr>   <chr>   <dbl> <chr>  
+    ## 1    1002  2019 FFE     pre_ru…     1 ENDO-… dite… dehydr… dw      0.421 suscep…
+    ## 2    1002  2019 FFE     pre_ru…     1 ENDO-… dite… levopi… dw      8.63  suscep…
+    ## # … with abbreviated variable names ¹​treatment, ²​assessment, ³​compound,
+    ## #   ⁴​mass_type, ⁵​resistance_class
+    ## 
+    ## $tree_height
+    ## # A tibble: 2 × 4
+    ##   tree_ID ht6     ht5   ht1
+    ##     <dbl> <chr> <dbl> <dbl>
+    ## 1    1001 25       20   9.5
+    ## 2    1002 43       29  15.3
+    ## 
+    ## $tree_meta
+    ## # A tibble: 2 × 6
+    ##   tree_ID family   block endo_trt rust_trt resistance_class
+    ##     <dbl> <chr>    <dbl> <chr>    <chr>    <chr>           
+    ## 1    1001 ENDO-159     1 FFE      Yes      susceptible     
+    ## 2    1002 ENDO-159     1 FFE      Yes      susceptible     
+    ## 
+    ## $tree_rust_response
+    ## # A tibble: 2 × 28
+    ##   tree_ID inoc_dens   ht6   dm6   sv6 alive6  vig6   ht5   dm5   sv5  vig5   bi5
+    ##     <dbl>     <dbl> <dbl> <dbl> <dbl> <chr>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+    ## 1    1001      3400    25     4     6 Yes        1    20     4     3     1     2
+    ## 2    1002      3400    43     4     7 Yes        6    29     4     5     1     3
+    ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
+    ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
+    ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
 
 # Results
 
 The following function produces the permutation tests and visual
 ordination figures for each resistance class (permutations = 1999). The
 test is run on individual trees; the ordination figures show centroids
-and standard errors for assessment and treatment groups.
+and standard errors for assessment and treatment groups. Supplemental
+ordinations of terpene compounds are also shown.
 
 ``` r
 terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3) {
@@ -98,7 +137,7 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
   set.seed(123)
   perm_test <-
     adonis2(
-      terp ~ treatment * assessment,
+      terp ~ assessment * treatment,
       data = expl,
       permutations = 1999,
       method = "bray",
@@ -150,12 +189,6 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       aes(shape = assessment, fill = treatment),
       size = pt_sz,
       stroke = bar_sz) +
-    geom_text(
-      data = terp_wa,
-      aes(x = X1, y = X2, label = compound),
-      family = "serif",
-      size = 8 * 0.36
-    ) +
     labs(
       x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
       y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
@@ -171,8 +204,25 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     permutation_test_result = perm_test
   )
   
+  plot_compounds <- 
+    ggplot(terp_wa, aes(x = X1, y = X2)) +
+    geom_vline(xintercept = 0, linetype = "dotted") +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_label(
+      aes(label = compound),
+      family = "serif",
+      size = 8 * 0.36
+    ) +
+    labs(
+      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      title = paste0("Terpenes in ", c, " families")
+    ) +
+    theme_bgl
+  
   #+ figure_ordination
   print(plot_ord)
+  print(plot_compounds)
 
   return(out)
 
@@ -181,15 +231,11 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
 
 ## Susceptible resistance class seedlings
 
-``` r
-terpene_pcoa("susceptible")
-```
-
     ## ---------------------------------------------------------------------
     ## Resistance type susceptible selected.
     ## ---------------------------------------------------------------------
 
-![](terpenes_globalTests_files/figure-gfm/susc_test-1.png)<!-- -->
+![](terpenes_globalTests_files/figure-gfm/susc_test-1.png)<!-- -->![](terpenes_globalTests_files/figure-gfm/susc_test-2.png)<!-- -->
 
     ## $permutation_test_result
     ## Permutation test for adonis under reduced model
@@ -197,11 +243,11 @@ terpene_pcoa("susceptible")
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ treatment * assessment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
+    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
     ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## treatment              3    0.921 0.02828 2.3984 0.0005 ***
-    ## assessment             2    1.418 0.04352 5.5357 0.0005 ***
-    ## treatment:assessment   6    0.916 0.02810 1.1915 0.1185    
+    ## assessment             2    1.486 0.04561 5.8021 0.0005 ***
+    ## treatment              3    0.853 0.02619 2.2208 0.0005 ***
+    ## assessment:treatment   6    0.916 0.02810 1.1915 0.1185    
     ## Residual             229   29.328 0.90010                  
     ## Total                240   32.583 1.00000                  
     ## ---
@@ -209,15 +255,11 @@ terpene_pcoa("susceptible")
 
 ## Major gene resistance class seedlings
 
-``` r
-terpene_pcoa("MGR")
-```
-
     ## ---------------------------------------------------------------------
     ## Resistance type MGR selected.
     ## ---------------------------------------------------------------------
 
-![](terpenes_globalTests_files/figure-gfm/mgr_test-1.png)<!-- -->
+![](terpenes_globalTests_files/figure-gfm/mgr_test-1.png)<!-- -->![](terpenes_globalTests_files/figure-gfm/mgr_test-2.png)<!-- -->
 
     ## $permutation_test_result
     ## Permutation test for adonis under reduced model
@@ -225,11 +267,11 @@ terpene_pcoa("MGR")
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ treatment * assessment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
+    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
     ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## treatment              3   0.5548 0.03656 1.5686 0.0180 *  
-    ## assessment             2   1.0997 0.07248 4.6642 0.0005 ***
-    ## treatment:assessment   6   0.9040 0.05958 1.2780 0.0505 .  
+    ## assessment             2   1.0920 0.07197 4.6314 0.0005 ***
+    ## treatment              3   0.5625 0.03707 1.5904 0.0180 *  
+    ## assessment:treatment   6   0.9040 0.05958 1.2780 0.0505 .  
     ## Residual             107  12.6144 0.83138                  
     ## Total                118  15.1729 1.00000                  
     ## ---
@@ -237,15 +279,11 @@ terpene_pcoa("MGR")
 
 ## Quantitative gene resistance class seedlings
 
-``` r
-terpene_pcoa("QDR")
-```
-
     ## ---------------------------------------------------------------------
     ## Resistance type QDR selected.
     ## ---------------------------------------------------------------------
 
-![](terpenes_globalTests_files/figure-gfm/qdr_test-1.png)<!-- -->
+![](terpenes_globalTests_files/figure-gfm/qdr_test-1.png)<!-- -->![](terpenes_globalTests_files/figure-gfm/qdr_test-2.png)<!-- -->
 
     ## $permutation_test_result
     ## Permutation test for adonis under reduced model
@@ -253,11 +291,11 @@ terpene_pcoa("QDR")
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ treatment * assessment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
+    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
     ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## treatment              3    0.935 0.01821 2.3113 0.0010 ***
-    ## assessment             2    2.559 0.04984 9.4873 0.0005 ***
-    ## treatment:assessment   6    0.919 0.01790 1.1358 0.1880    
+    ## assessment             2    2.618 0.05099 9.7065 0.0005 ***
+    ## treatment              3    0.876 0.01706 2.1652 0.0010 ***
+    ## assessment:treatment   6    0.919 0.01790 1.1358 0.1880    
     ## Residual             348   46.930 0.91405                  
     ## Total                359   51.342 1.00000                  
     ## ---

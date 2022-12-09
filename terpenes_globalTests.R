@@ -7,8 +7,8 @@
 #'     toc: true
 #'     toc_depth: 3
 #'     df_print: paged
-#'     fig_width: 9.5
-#'     fig_height: 9
+#'     fig_width: 7
+#'     fig_height: 6
 #' ---
 #' 
 #' # Description
@@ -27,22 +27,24 @@ if (any(! packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
-# Load ggplot styles and themes from text file
 #+ ggstyle
+# Load ggplot styles and themes from text file
 source("gg_style.txt")
 #'
 #' # Data
-#' See [data_etl.md](https://github.com/bglarkin/wwp_terpenes/blob/main/data_etl.md) for a brief data dictionary. 
+#' See [data_etl.md](https://github.com/bglarkin/wwp_terpenes/blob/main/data_etl.md) for more description of
+#' the source data. Header views of each data table are presented here. 
 #' Names only provided here.
 #+ data_source,message=FALSE,results=FALSE
 source("data_etl.R")
-#+ data_names
-names(data)
+#+ data_headers
+sapply(data, function(x) head(x, 2))
 #'
 #' # Results
 #' The following function produces the permutation tests and visual ordination figures for
 #' each resistance class (permutations = 1999). The test is run on individual trees; the ordination figures show
-#' centroids and standard errors for assessment and treatment groups.
+#' centroids and standard errors for assessment and treatment groups. Supplemental ordinations of 
+#' terpene compounds are also shown. 
 #+ perm_pcoa_function
 terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3) {
 
@@ -65,7 +67,7 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
   set.seed(123)
   perm_test <-
     adonis2(
-      terp ~ treatment * assessment,
+      terp ~ assessment * treatment,
       data = expl,
       permutations = 1999,
       method = "bray",
@@ -117,12 +119,6 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       aes(shape = assessment, fill = treatment),
       size = pt_sz,
       stroke = bar_sz) +
-    geom_text(
-      data = terp_wa,
-      aes(x = X1, y = X2, label = compound),
-      family = "serif",
-      size = 8 * 0.36
-    ) +
     labs(
       x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
       y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
@@ -138,21 +134,38 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     permutation_test_result = perm_test
   )
   
+  plot_compounds <- 
+    ggplot(terp_wa, aes(x = X1, y = X2)) +
+    geom_vline(xintercept = 0, linetype = "dotted") +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_label(
+      aes(label = compound),
+      family = "serif",
+      size = 8 * 0.36
+    ) +
+    labs(
+      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      title = paste0("Terpenes in ", c, " families")
+    ) +
+    theme_bgl
+  
   #+ figure_ordination
   print(plot_ord)
+  print(plot_compounds)
 
   return(out)
 
 }
 #'
 #' ## Susceptible resistance class seedlings
-#+ susc_test
+#+ susc_test,echo=FALSE
 terpene_pcoa("susceptible")
 #' ## Major gene resistance class seedlings
-#+ mgr_test
+#+ mgr_test,echo=FALSE
 terpene_pcoa("MGR")
 #' ## Quantitative gene resistance class seedlings
-#+ qdr_test
+#+ qdr_test,echo=FALSE
 terpene_pcoa("QDR")
 
 
