@@ -28,6 +28,9 @@ repeated, making the analysis scripts a little shorter.
 
 ## Pre-cleaning
 
+This step clears the environment whenever data are loaded from
+individual scripts, preventing collisions or use of ghost objects.
+
 ``` r
 rm(list = ls()) 
 ```
@@ -94,18 +97,24 @@ Useful for an **env** explanatory file to go along with a distance
 matrix produced from `terpene`.
 
 ``` r
-data$terpene_meta %>% glimpse()
+data[1]
 ```
 
-    ## Rows: 720
-    ## Columns: 7
-    ## $ tree_ID          <dbl> 1002, 1003, 1007, 1009, 1012, 1016, 1019, 1021, 1023,…
-    ## $ year             <dbl> 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019,…
-    ## $ treatment        <chr> "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE…
-    ## $ assessment       <chr> "pre_rust", "pre_rust", "pre_rust", "pre_rust", "pre_…
-    ## $ block            <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,…
-    ## $ family           <chr> "ENDO-159", "ENDO-159", "ENDO-156", "ENDO-156", "ENDO…
-    ## $ resistance_class <chr> "susceptible", "susceptible", "MGR", "MGR", "QDR", "Q…
+    ## $terpene_meta
+    ## # A tibble: 720 × 7
+    ##    tree_ID  year treatment assessment block family   resistance_class
+    ##      <dbl> <dbl> <chr>     <chr>      <dbl> <chr>    <chr>           
+    ##  1    1002  2019 FFE       pre_rust       1 ENDO-159 susceptible     
+    ##  2    1003  2019 FFE       pre_rust       1 ENDO-159 susceptible     
+    ##  3    1007  2019 FFE       pre_rust       1 ENDO-156 MGR             
+    ##  4    1009  2019 FFE       pre_rust       1 ENDO-156 MGR             
+    ##  5    1012  2019 FFE       pre_rust       1 ENDO-158 QDR             
+    ##  6    1016  2019 FFE       pre_rust       1 ENDO-158 QDR             
+    ##  7    1019  2019 FFE       pre_rust       1 ENDO-157 QDR             
+    ##  8    1021  2019 FFE       pre_rust       1 ENDO-157 QDR             
+    ##  9    1023  2019 FFE       pre_rust       1 ENDO-155 QDR             
+    ## 10    1028  2019 FFE       pre_rust       1 ENDO-155 QDR             
+    ## # … with 710 more rows
 
 ### `terpene`
 
@@ -115,22 +124,25 @@ convenience. Normally, only dry weights of terpenes are used in
 analysis, but wet weights are also included here.
 
 ``` r
-data$terpene %>% glimpse()
+data[2]
 ```
 
-    ## Rows: 31,680
-    ## Columns: 11
-    ## $ tree_ID          <dbl> 1002, 1002, 1002, 1002, 1002, 1002, 1003, 1003, 1003,…
-    ## $ year             <dbl> 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019, 2019,…
-    ## $ treatment        <chr> "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE…
-    ## $ assessment       <chr> "pre_rust", "pre_rust", "pre_rust", "pre_rust", "pre_…
-    ## $ block            <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
-    ## $ family           <chr> "ENDO-159", "ENDO-159", "ENDO-159", "ENDO-159", "ENDO…
-    ## $ class            <chr> "diterpene", "diterpene", "diterpene", "diterpene", "…
-    ## $ compound         <chr> "dehydroabietic", "levopiramic", "sandaracopiramic", …
-    ## $ mass_type        <chr> "dw", "dw", "dw", "dw", "dw", "dw", "dw", "dw", "dw",…
-    ## $ mass             <dbl> 0.421, 8.626, 4.115, 0.324, 2.005, 1.233, 0.244, 10.8…
-    ## $ resistance_class <chr> "susceptible", "susceptible", "susceptible", "suscept…
+    ## $terpene
+    ## # A tibble: 31,680 × 11
+    ##    tree_ID  year treatment assessment block family  class compo…¹ mass_…²   mass
+    ##      <dbl> <dbl> <chr>     <chr>      <dbl> <chr>   <chr> <chr>   <chr>    <dbl>
+    ##  1    1002  2019 FFE       pre_rust       1 ENDO-1… dite… dehydr… dw       0.421
+    ##  2    1002  2019 FFE       pre_rust       1 ENDO-1… dite… levopi… dw       8.63 
+    ##  3    1002  2019 FFE       pre_rust       1 ENDO-1… dite… sandar… dw       4.12 
+    ##  4    1002  2019 FFE       pre_rust       1 ENDO-1… dite… neoabi… dw       0.324
+    ##  5    1002  2019 FFE       pre_rust       1 ENDO-1… dite… palust… dw       2.00 
+    ##  6    1002  2019 FFE       pre_rust       1 ENDO-1… dite… abietic dw       1.23 
+    ##  7    1003  2019 FFE       pre_rust       1 ENDO-1… dite… dehydr… dw       0.244
+    ##  8    1003  2019 FFE       pre_rust       1 ENDO-1… dite… levopi… dw      10.8  
+    ##  9    1003  2019 FFE       pre_rust       1 ENDO-1… dite… sandar… dw       2.54 
+    ## 10    1003  2019 FFE       pre_rust       1 ENDO-1… dite… neoabi… dw       0.191
+    ## # … with 31,670 more rows, 1 more variable: resistance_class <chr>, and
+    ## #   abbreviated variable names ¹​compound, ²​mass_type
 
 ### `tree_height`
 
@@ -138,15 +150,24 @@ Only applicable height measurements are included here to simplify use of
 height data in correlations.
 
 ``` r
-data$tree_height %>% glimpse()
+data[3]
 ```
 
-    ## Rows: 1,023
-    ## Columns: 4
-    ## $ tree_ID <dbl> 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 10…
-    ## $ ht6     <chr> "25", "43", "33.5", "31", "44", "32.5", "38.5", "40.5", "62", …
-    ## $ ht5     <dbl> 20.0, 29.0, 30.0, 23.5, 32.0, 21.0, 29.0, 24.5, 33.0, 22.5, 23…
-    ## $ ht1     <dbl> 9.5, 15.3, 13.4, 10.2, 15.0, 16.3, 15.1, 15.8, 16.0, 16.5, 11.…
+    ## $tree_height
+    ## # A tibble: 1,023 × 4
+    ##    tree_ID ht6     ht5   ht1
+    ##      <dbl> <chr> <dbl> <dbl>
+    ##  1    1001 25     20     9.5
+    ##  2    1002 43     29    15.3
+    ##  3    1003 33.5   30    13.4
+    ##  4    1004 31     23.5  10.2
+    ##  5    1005 44     32    15  
+    ##  6    1006 32.5   21    16.3
+    ##  7    1007 38.5   29    15.1
+    ##  8    1008 40.5   24.5  15.8
+    ##  9    1009 62     33    16  
+    ## 10    1010 39.5   22.5  16.5
+    ## # … with 1,013 more rows
 
 ### `tree_meta`
 
@@ -154,53 +175,48 @@ Experimental design and metadata on all trees (not just those that had
 terpenes extracted).
 
 ``` r
-data$tree_meta %>% glimpse()
+data[4]
 ```
 
-    ## Rows: 1,023
-    ## Columns: 6
-    ## $ tree_ID          <dbl> 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009,…
-    ## $ family           <chr> "ENDO-159", "ENDO-159", "ENDO-159", "ENDO-159", "ENDO…
-    ## $ block            <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
-    ## $ endo_trt         <chr> "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE", "FFE…
-    ## $ rust_trt         <chr> "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes…
-    ## $ resistance_class <chr> "susceptible", "susceptible", "susceptible", "suscept…
+    ## $tree_meta
+    ## # A tibble: 1,023 × 6
+    ##    tree_ID family   block endo_trt rust_trt resistance_class
+    ##      <dbl> <chr>    <dbl> <chr>    <chr>    <chr>           
+    ##  1    1001 ENDO-159     1 FFE      Yes      susceptible     
+    ##  2    1002 ENDO-159     1 FFE      Yes      susceptible     
+    ##  3    1003 ENDO-159     1 FFE      Yes      susceptible     
+    ##  4    1004 ENDO-159     1 FFE      Yes      susceptible     
+    ##  5    1005 ENDO-159     1 FFE      Yes      susceptible     
+    ##  6    1006 ENDO-156     1 FFE      Yes      MGR             
+    ##  7    1007 ENDO-156     1 FFE      Yes      MGR             
+    ##  8    1008 ENDO-156     1 FFE      Yes      MGR             
+    ##  9    1009 ENDO-156     1 FFE      Yes      MGR             
+    ## 10    1010 ENDO-156     1 FFE      Yes      MGR             
+    ## # … with 1,013 more rows
 
 ### `tree_rust_response`
 
 Disease response traits on all seedlings.
 
 ``` r
-data$tree_rust_response %>% glimpse()
+data[5]
 ```
 
-    ## Rows: 509
-    ## Columns: 28
-    ## $ tree_ID   <dbl> 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, …
-    ## $ inoc_dens <dbl> 3400, 3400, 3400, 3400, 3400, 3400, 3400, 3400, 3400, 3400, …
-    ## $ ht6       <dbl> 25.0, 43.0, 33.5, NA, NA, NA, 38.5, NA, 62.0, 39.5, 33.0, NA…
-    ## $ dm6       <dbl> 4, 4, 4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, …
-    ## $ sv6       <dbl> 6, 7, 7, 9, 9, 9, 7, 9, 0, 1, 3, 9, 3, 7, 9, 5, 9, 9, 3, 8, …
-    ## $ alive6    <chr> "Yes", "Yes", "Yes", "No", "No", "No", "Yes", "No", "Yes", "…
-    ## $ vig6      <dbl> 1, 6, 2, 3, 3, 3, 6, 3, 1, 1, 1, 3, 1, 6, 3, 1, 3, 3, 1, 6, …
-    ## $ ht5       <dbl> 20.0, 29.0, 30.0, 23.5, 32.0, 21.0, 29.0, 24.5, 33.0, 22.5, …
-    ## $ dm5       <dbl> 4, 4, 4, 4, 4, 4, 4, 0, 0, 4, 4, 4, 0, 4, 4, 0, 4, 4, 0, 4, …
-    ## $ sv5       <dbl> 3, 5, 5, 5, 6, 1, 3, 0, 0, 1, 1, 2, 0, 3, 7, 0, 6, 6, 0, 6, …
-    ## $ vig5      <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, …
-    ## $ bi5       <dbl> 2, 3, 3, 3, 10, 0, 2, 0, 0, 0, 1, 4, 0, 5, 4, 0, 3, 3, 0, 6,…
-    ## $ nc5       <dbl> 2, 5, 6, 3, 10, 2, 3, 0, 0, 1, 1, 4, 0, 7, 5, 0, 4, 3, 0, 7,…
-    ## $ pbr5      <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ br5       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ ss5       <dbl> 2, 5, 6, 3, 10, 2, 3, 0, 0, 1, 1, 4, 0, 7, 5, 0, 4, 3, 0, 7,…
-    ## $ dm4       <dbl> 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 4, 0, 4, …
-    ## $ sv4       <dbl> 3, 5, 3, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 1, 6, 0, 6, …
-    ## $ ss4       <dbl> 2, 6, 4, 2, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 3, 3, 0, 6,…
-    ## $ dm3       <dbl> 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 4, 0, 4, …
-    ## $ sv3       <dbl> 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 5, 0, 3, …
-    ## $ vig3      <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-    ## $ bi3       <dbl> 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 5, …
-    ## $ nc3       <dbl> 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3, 2, 0, 5, …
-    ## $ pbr3      <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ br3       <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
-    ## $ ss3       <dbl> 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3, 2, 0, 5, …
-    ## $ ht1       <dbl> 9.5, 15.3, 13.4, 10.2, 15.0, 16.3, 15.1, 15.8, 16.0, 16.5, 1…
+    ## $tree_rust_response
+    ## # A tibble: 509 × 28
+    ##    tree_ID inoc_d…¹   ht6   dm6   sv6 alive6  vig6   ht5   dm5   sv5  vig5   bi5
+    ##      <dbl>    <dbl> <dbl> <dbl> <dbl> <chr>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+    ##  1    1001     3400  25       4     6 Yes        1  20       4     3     1     2
+    ##  2    1002     3400  43       4     7 Yes        6  29       4     5     1     3
+    ##  3    1003     3400  33.5     4     7 Yes        2  30       4     5     1     3
+    ##  4    1004     3400  NA       4     9 No         3  23.5     4     5     1     3
+    ##  5    1005     3400  NA       4     9 No         3  32       4     6     1    10
+    ##  6    1006     3400  NA       4     9 No         3  21       4     1     1     0
+    ##  7    1007     3400  38.5     4     7 Yes        6  29       4     3     1     2
+    ##  8    1008     3400  NA       4     9 No         3  24.5     0     0     1     0
+    ##  9    1009     3400  62       0     0 Yes        1  33       0     0     1     0
+    ## 10    1010     3400  39.5     4     1 Yes        1  22.5     4     1     1     0
+    ## # … with 499 more rows, 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>,
+    ## #   ss5 <dbl>, dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>,
+    ## #   vig3 <dbl>, bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>,
+    ## #   ht1 <dbl>, and abbreviated variable name ¹​inoc_dens

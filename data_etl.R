@@ -18,6 +18,8 @@
 #' making the analysis scripts a little shorter.
 #' 
 #' ## Pre-cleaning
+#' This step clears the environment whenever data are loaded from individual scripts, 
+#' preventing collisions or use of ghost objects. 
 #+ cleaning,message=FALSE
 rm(list = ls()) 
 #' 
