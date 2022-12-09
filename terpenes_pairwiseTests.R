@@ -43,3 +43,104 @@ source("data_etl.R")
 sapply(data, function(x) head(x, 2))
 #'
 #' # Results
+#' 
+#' 
+
+
+
+pairwise_perm <- function(c, t) {
+  df <- data$terpene %>% 
+    mutate(class_assessment = paste(assessment, resistance_class, sep = "_")) %>% 
+    filter(mass_type == "dw",
+           class_assessment == c,
+           treatment %in% c("Control", t))%>% 
+    select(tree_ID, treatment, assessment, block, compound, mass) %>% 
+    pivot_wider(names_from = compound, values_from = mass)
+  X <- data.frame(
+    df %>% select(-treatment, -assessment, -block),
+    row.names = 1
+  )
+  Y <- data.frame(
+    df %>% select(tree_ID, treatment, block),
+    row.names = 1
+  )
+  set.seed(146)
+  result <- 
+    data.frame(
+      resistance_class = c,
+      comparison = paste(sort(unique(df$treatment)), collapse = "_"),
+      adonis2(X ~ treatment, data = Y, permutations = 99, method = "bray", sqrt.dist = TRUE, strata = Y$block)
+    )[1, ]
+  out <- rbind(out, result)
+  return(out)
+}
+
+out <- NULL
+pairwise_perm("pre_rust_MGR", "FFE")
+
+# "pre_rust_susceptible"  "pre_rust_MGR"          "pre_rust_QDR"          "rust_inoc_susceptible" "rust_inoc_MGR"         "rust_inoc_QDR"         "rust_ctrl_QDR"        
+# "rust_ctrl_MGR"         "rust_ctrl_susceptible"
+
+
+
+
+data$terpene %>% 
+  filter(mass_type == "dw") %>% 
+  mutate(class_assessment = paste(assessment, resistance_class, sep = "_")) %>% 
+  pull(class_assessment) %>% 
+  unique()
+
+
+
+
+
+pairwise_perm_inner <- function(a, c, t) {
+  df <- data$terpene %>% 
+    filter(mass_type == "dw",
+           resistance_class == c, 
+           assessment == a,
+           treatment %in% c("Control", t)) %>% 
+    select(tree_ID, treatment, assessment, block, compound, mass) %>% 
+    pivot_wider(names_from = compound, values_from = mass)
+  X <- data.frame(
+    df %>% select(-treatment, -assessment, -block),
+    row.names = 1
+  )
+  Y <- data.frame(
+    df %>% select(tree_ID, treatment, block),
+    row.names = 1
+  )
+  set.seed(146)
+  result <- 
+    data.frame(
+      resistance_class = c,
+      comparison = paste(sort(unique(df$treatment)), collapse = "_"),
+      adonis2(X ~ treatment, data = Y, permutations = 99, method = "bray", sqrt.dist = TRUE, strata = Y$block)
+    )[1, ]
+  out <- rbind(out, result)
+  return(out)
+}
+
+
+
+pairwise_perm_outer <- function(a) {
+  
+  
+  list(
+    lapply(classes, pairwise_perm_inner, t = "EMF", a = a),
+    lapply(classes, pairwise_perm_inner, t = "FFE", a = a),
+    lapply(classes, pairwise_perm_inner, t = "FFE+EMF", a = a)
+  ) %>% 
+    bind_rows() %>% 
+    rownames_to_column(var = "delete") %>% 
+    select(-delete, -Df, -SumOfSqs) %>%
+    arrange(resistance_class) %>% 
+    kable(format = "pandoc")
+  
+}
+
+
+out <- NULL
+classes <- c("QDR", "susceptible", "MGR")
+assessments <- c("pre_rust", "rust_inoc", "rust_ctrl")
+pairwise_perm_outer(assessments)
