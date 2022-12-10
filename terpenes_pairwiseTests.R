@@ -42,20 +42,19 @@ source("data_etl.R")
 #+ data_headers
 sapply(data, function(x) head(x, 2))
 #'
-#' # Results
-#' 
-#' 
+#' # Pairwise comparisions function
 
 
 
-pairwise_perm <- function(c, t) {
+pairwise_perm <- function(c,t,p=1999) {
+  out <- NULL
   df <- data$terpene %>% 
-    mutate(class_assessment = paste(assessment, resistance_class, sep = "_")) %>% 
+    mutate(assess_class_grp = paste(assessment, resistance_class, sep = "-")) %>% 
     filter(mass_type == "dw",
-           class_assessment == c,
+           assess_class_grp == c,
            treatment %in% c("Control", t))%>% 
     select(tree_ID, treatment, assessment, block, compound, mass) %>% 
-    pivot_wider(names_from = compound, values_from = mass)
+    pivot_wider(names_from = compound, values_from = mass, values_fill = 0)
   X <- data.frame(
     df %>% select(-treatment, -assessment, -block),
     row.names = 1
@@ -67,80 +66,36 @@ pairwise_perm <- function(c, t) {
   set.seed(146)
   result <- 
     data.frame(
-      resistance_class = c,
+      assess_class_grp = c,
       comparison = paste(sort(unique(df$treatment)), collapse = "_"),
-      adonis2(X ~ treatment, data = Y, permutations = 99, method = "bray", sqrt.dist = TRUE, strata = Y$block)
+      adonis2(X ~ treatment, data = Y, permutations = p, method = "bray", sqrt.dist = TRUE, strata = Y$block)
     )[1, ]
   out <- rbind(out, result)
   return(out)
 }
 
-out <- NULL
-pairwise_perm("pre_rust_MGR", "FFE")
 
-# "pre_rust_susceptible"  "pre_rust_MGR"          "pre_rust_QDR"          "rust_inoc_susceptible" "rust_inoc_MGR"         "rust_inoc_QDR"         "rust_ctrl_QDR"        
-# "rust_ctrl_MGR"         "rust_ctrl_susceptible"
-
-
-
-
-data$terpene %>% 
+assess_class_grp <- 
+  data$terpene %>% 
   filter(mass_type == "dw") %>% 
-  mutate(class_assessment = paste(assessment, resistance_class, sep = "_")) %>% 
+  mutate(class_assessment = paste(assessment, resistance_class, sep = "-")) %>% 
   pull(class_assessment) %>% 
   unique()
 
+#' # Results
+#' 
+#' 
+list(
+  lapply(assess_class_grp, pairwise_perm, t = "EMF"),
+  lapply(assess_class_grp, pairwise_perm, t = "FFE"),
+  lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
+) %>% 
+  bind_rows() %>% 
+  mutate(p_val = `Pr..F.`,
+         p_val_adj = round(p.adjust(p_val, "BH"), 4)) %>% 
+  rownames_to_column(var = "delete") %>% 
+  select(-delete, -`Pr..F.`, -Df, -SumOfSqs) %>%
+  separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>% 
+  arrange(resistance_class, assessment, comparison) %>% 
+  kable(format = "pandoc", caption = "Pairwise comparisons of terpene composition done by permutation (n=1999);\np-values corrected by the Benjamini-Hochberg method.")
 
-
-
-
-pairwise_perm_inner <- function(a, c, t) {
-  df <- data$terpene %>% 
-    filter(mass_type == "dw",
-           resistance_class == c, 
-           assessment == a,
-           treatment %in% c("Control", t)) %>% 
-    select(tree_ID, treatment, assessment, block, compound, mass) %>% 
-    pivot_wider(names_from = compound, values_from = mass)
-  X <- data.frame(
-    df %>% select(-treatment, -assessment, -block),
-    row.names = 1
-  )
-  Y <- data.frame(
-    df %>% select(tree_ID, treatment, block),
-    row.names = 1
-  )
-  set.seed(146)
-  result <- 
-    data.frame(
-      resistance_class = c,
-      comparison = paste(sort(unique(df$treatment)), collapse = "_"),
-      adonis2(X ~ treatment, data = Y, permutations = 99, method = "bray", sqrt.dist = TRUE, strata = Y$block)
-    )[1, ]
-  out <- rbind(out, result)
-  return(out)
-}
-
-
-
-pairwise_perm_outer <- function(a) {
-  
-  
-  list(
-    lapply(classes, pairwise_perm_inner, t = "EMF", a = a),
-    lapply(classes, pairwise_perm_inner, t = "FFE", a = a),
-    lapply(classes, pairwise_perm_inner, t = "FFE+EMF", a = a)
-  ) %>% 
-    bind_rows() %>% 
-    rownames_to_column(var = "delete") %>% 
-    select(-delete, -Df, -SumOfSqs) %>%
-    arrange(resistance_class) %>% 
-    kable(format = "pandoc")
-  
-}
-
-
-out <- NULL
-classes <- c("QDR", "susceptible", "MGR")
-assessments <- c("pre_rust", "rust_inoc", "rust_ctrl")
-pairwise_perm_outer(assessments)
