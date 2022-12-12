@@ -39,79 +39,75 @@ source("gg_style.txt")
 source("data_etl.R")
 #+ data_headers
 sapply(data, function(x) head(x, 2))
-#'
-#' # Results
+#' 
+#' # Functions
 #' The following function produces the permutation tests and visual ordination figures for
 #' each resistance class (permutations = 1999). The test is run on individual trees; the ordination figures show
 #' centroids and standard errors for assessment and treatment groups. Supplemental ordinations of 
 #' terpene compounds are also shown. 
 #+ perm_pcoa_function
-terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3) {
-
+terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3, p = 1999) {
+  
   cat("---------------------------------------------------------------------\n")
   cat(paste("Resistance type", c, "selected."))
   cat("\n---------------------------------------------------------------------\n")
   
   # Load styles inside function
   source("gg_style.txt")
-
+  
   df <- data$terpene %>%
     filter(mass_type == "dw",
            resistance_class == c) %>%
     mutate(tree_key = paste(tree_ID, year, sep = "-")) %>%
     select(tree_key, treatment, assessment, compound, mass) %>%
     pivot_wider(names_from = compound, values_from = mass, values_fill = 0)
-  terp <-
+  X <-
     data.frame(df %>% select(-treatment, -assessment), row.names = 1)
-  expl <- data.frame(df %>% select(treatment, assessment))
+  Y <- data.frame(df %>% select(treatment, assessment))
   set.seed(123)
   perm_test <-
     adonis2(
-      terp ~ assessment * treatment,
-      data = expl,
-      permutations = 1999,
-      method = "bray",
-      sqrt.dist = TRUE,
-      by = "terms"
+      scale(X) ~ assessment * treatment,
+      data = Y,
+      permutations = p,
+      method = "euclidean"
     )
-
-  terp_bray <- vegdist(terp, "bray")
-  terp_pcoa <-
-    cmdscale(sqrt(terp_bray), k = (nrow(terp) - 1), eig = TRUE)
+  
+  terp_pca <- rda(X, scale = TRUE)
   sites <-
-    data.frame(scores(terp_pcoa, "sites", choices = c(1, 2))) %>%
+    data.frame(scores(terp_pca, "sites", choices = c(1, 2))) %>%
     rownames_to_column(var = "tree_key") %>%
     left_join(df %>% select(tree_key, treatment, assessment), by = "tree_key")
   site_centers <-
     sites %>%
     group_by(assessment, treatment) %>%
-    summarize(Dim1_mean = mean(Dim1),
-              Dim1_se_pos = Dim1_mean + (sd(Dim1) / sqrt(length(Dim1))),
-              Dim1_se_neg = Dim1_mean - (sd(Dim1) / sqrt(length(Dim1))),
-              Dim2_mean = mean(Dim2),
-              Dim2_se_pos = Dim2_mean + (sd(Dim2) / sqrt(length(Dim2))),
-              Dim2_se_neg = Dim2_mean - (sd(Dim2) / sqrt(length(Dim2))),
+    summarize(PC1_mean = mean(PC1),
+              PC1_se_pos = PC1_mean + (sd(PC1) / sqrt(length(PC1))),
+              PC1_se_neg = PC1_mean - (sd(PC1) / sqrt(length(PC1))),
+              PC2_mean = mean(PC2),
+              PC2_se_pos = PC2_mean + (sd(PC2) / sqrt(length(PC2))),
+              PC2_se_neg = PC2_mean - (sd(PC2) / sqrt(length(PC2))),
               .groups = "drop")
   labs_pct <-
-    round((terp_pcoa$eig / sum(terp_pcoa$eig))[1:2] * 100, 0)
-  terp_wa <-
-    data.frame(wascores(terp_pcoa$points[, 1:2], terp, expand = FALSE)) %>%
+    round((terp_pca$CA$eig / sum(terp_pca$CA$eig))[1:2] * 100, 0)
+  terp_centers <-
+    data.frame(scores(terp_pca, "species", choices = c(1,2))) %>%
     rownames_to_column(var = "compound")
-
-  bar_width_d1 <- with(site_centers, max(Dim1_se_pos) - min(Dim1_se_neg)) * bar_wd
-  bar_width_d2 <- with(site_centers, max(Dim2_se_pos) - min(Dim2_se_neg)) * bar_wd
-
+  
+  bar_width_d1 <- with(site_centers, max(PC1_se_pos) - min(PC1_se_neg)) * bar_wd
+  bar_width_d2 <- with(site_centers, max(PC2_se_pos) - min(PC2_se_neg)) * bar_wd
+  
   plot_ord <-
-    ggplot(site_centers, aes(x = Dim1_mean, y = Dim2_mean)) +
+    ggplot(site_centers, aes(x = PC1_mean, y = PC2_mean)) +
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     geom_errorbar(
-      aes(x = Dim1_mean, ymin = Dim2_se_neg, ymax = Dim2_se_pos),
+      aes(x = PC1_mean, ymin = PC2_se_neg, ymax = PC2_se_pos),
       width = bar_width_d1,
       size = bar_sz
     ) +
     geom_errorbar(
-      aes(y = Dim2_mean, xmin = Dim1_se_neg, xmax = Dim1_se_pos),
+      aes(y = PC2_mean, xmin = PC1_se_neg, xmax = PC1_se_pos),
       width = bar_width_d2,
       size = bar_sz
     ) +
@@ -120,8 +116,8 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       size = pt_sz,
       stroke = bar_sz) +
     labs(
-      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
-      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
       title = paste0("Terpenes in ", c, " families")
     ) +
     scale_shape_manual(name = "Assessment", values = c(21,22,24)) +
@@ -129,13 +125,9 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     guides(fill = guide_legend(override.aes = list(shape = 21)),
            shape = guide_legend(override.aes = list(fill = "gray50"))) +
     theme_bgl
-
-  out <- list(
-    permutation_test_result = perm_test
-  )
   
   plot_compounds <- 
-    ggplot(terp_wa, aes(x = X1, y = X2)) +
+    ggplot(terp_centers, aes(x = PC1, y = PC2)) +
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     geom_label(
@@ -144,19 +136,27 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       size = 8 * 0.36
     ) +
     labs(
-      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
-      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
       title = paste0("Terpenes in ", c, " families")
     ) +
     theme_bgl
   
+  out <- list(
+    permutation_test_result = perm_test
+  )
+  
   #+ figure_ordination
   print(plot_ord)
   print(plot_compounds)
-
+  
   return(out)
-
+  
 }
+#' 
+#' # Results
+#' Use of standardized terpene masses in a euclidean distance matrix greatly improves clustering
+#' and increases separation in a permutation test.
 #'
 #' ## Susceptible resistance class seedlings
 #+ susc_test,echo=FALSE

@@ -68,7 +68,7 @@ pairwise_perm <- function(c,t,p=1999) {
     data.frame(
       assess_class_grp = c,
       comparison = paste(sort(unique(df$treatment)), collapse = "_"),
-      adonis2(X ~ treatment, data = Y, permutations = p, method = "bray", sqrt.dist = TRUE, strata = Y$block)
+      adonis2(scale(X) ~ treatment, data = Y, permutations = p, method = "euclidean", sqrt.dist = FALSE, strata = Y$block)
     )[1, ]
   out <- rbind(out, result)
   return(out)
@@ -98,4 +98,6 @@ list(
   separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>% 
   arrange(resistance_class, assessment, comparison) %>% 
   kable(format = "pandoc", caption = "Pairwise comparisons of terpene composition done by permutation (n=1999);\np-values corrected by the Benjamini-Hochberg method.")
+
+
 
