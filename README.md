@@ -10,5 +10,12 @@ Ordinations of class centroids for each resistance class of seedlings. Locations
 - Report format: [terpenes_globalTests.md](terpenes_globalTests.md)
 - Raw script: [terpenes_globalTests.R](terpenes_globalTests.R)
 
+## Pairwise comparisons
+Permutation tests are used to test pairwise multivariate differences in terpene composition
+within resistance classes and assessments, and between symbiont controls and treatments. The tests are 
+permuted within experimental greenhouse blocks.
+- Report format: [terpenes_pairwiseTests.md](terpenes_pairwiseTests.md)
+- Raw script: [terpenes_pairwiseTests.R](terpenes_pairwiseTests.R)
+
 ## Other files
 - [gg_style.txt](gg_style.txt) contains adjustments to ggplot themes to make figures consistent within this repository.

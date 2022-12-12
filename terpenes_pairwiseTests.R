@@ -42,10 +42,22 @@ source("data_etl.R")
 #+ data_headers
 sapply(data, function(x) head(x, 2))
 #'
-#' # Pairwise comparisions function
-
-
-
+#' # Pairwise comparisons function
+#' This function produces pairwise group comparisons between fungal controls and treatments
+#' for each pairwise comparison among assessments and resistance classes. A permutation test is 
+#' used in each comparison, using a blocks as strata in the model, 
+#' and a correction is made to p-values due to the number of comparisons 
+#' being done. 
+#' 
+#' 
+#' A dummy variable combining assessments and resistance_classes is needed to reduce the number of nested calls to `lapply()`. 
+#' The variable is `assess_class_grp`, below.
+#' 
+#' ## Terms
+#' - permutations = 19999
+#' - data standardization: standardize columns (scale x to zero mean and unit variance)
+#' - distance metric: euclidean
+#+ pairwise_perm_function
 pairwise_perm <- function(c,t,p=1999) {
   out <- NULL
   df <- data$terpene %>% 
@@ -73,8 +85,6 @@ pairwise_perm <- function(c,t,p=1999) {
   out <- rbind(out, result)
   return(out)
 }
-
-
 assess_class_grp <- 
   data$terpene %>% 
   filter(mass_type == "dw") %>% 
@@ -83,21 +93,30 @@ assess_class_grp <-
   unique()
 
 #' # Results
-#' 
-#' 
+#' See output table below.
+#+ func_apply
+func_apply <- 
 list(
   lapply(assess_class_grp, pairwise_perm, t = "EMF"),
   lapply(assess_class_grp, pairwise_perm, t = "FFE"),
   lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
-) %>% 
+)
+#+ func_result
+result_tab <- 
+  func_apply %>% 
   bind_rows() %>% 
   mutate(p_val = `Pr..F.`,
-         p_val_adj = round(p.adjust(p_val, "BH"), 4)) %>% 
+         p_val_adj = round(p.adjust(p_val, "BH"), 4),
+         sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")) %>% 
   rownames_to_column(var = "delete") %>% 
   select(-delete, -`Pr..F.`, -Df, -SumOfSqs) %>%
   separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>% 
-  arrange(resistance_class, assessment, comparison) %>% 
-  kable(format = "pandoc", caption = "Pairwise comparisons of terpene composition done by permutation (n=1999);\np-values corrected by the Benjamini-Hochberg method.")
-
+  arrange(resistance_class, assessment, comparison)
+#+ func_table,echo=FALSE
+result_tab %>% 
+  kable(format = "pandoc", 
+        caption = "Pairwise comparisons of terpene composition done by permutation (n=1999); p-values corrected by the Benjamini-Hochberg method.")
+#+ export,echo=FALSE,result=FALSE
+write_csv(result_tab, "pairwise_perm_table.csv")
 
 

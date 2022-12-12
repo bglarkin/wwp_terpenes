@@ -8,9 +8,9 @@ Beau Larkin
   id="toc-package-and-library-installation">Package and library
   installation</a>
 - <a href="#data" id="toc-data">Data</a>
-- <a href="#pairwise-comparisions-function"
-  id="toc-pairwise-comparisions-function">Pairwise comparisions
-  function</a>
+- <a href="#pairwise-comparisons-function"
+  id="toc-pairwise-comparisons-function">Pairwise comparisons function</a>
+  - <a href="#terms" id="toc-terms">Terms</a>
 - <a href="#results" id="toc-results">Results</a>
 
 # Description
@@ -103,9 +103,25 @@ sapply(data, function(x) head(x, 2))
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
-    ## # ℹ Use `colnames()` to see all variable names
 
-# Pairwise comparisions function
+# Pairwise comparisons function
+
+This function produces pairwise group comparisons between fungal
+controls and treatments for each pairwise comparison among assessments
+and resistance classes. A permutation test is used in each comparison,
+using a blocks as strata in the model, and a correction is made to
+p-values due to the number of comparisons being done.
+
+A dummy variable combining assessments and resistance_classes is needed
+to reduce the number of nested calls to `lapply()`. The variable is
+`assess_class_grp`, below.
+
+## Terms
+
+- permutations = 19999
+- data standardization: standardize columns (scale x to zero mean and
+  unit variance)
+- distance metric: euclidean
 
 ``` r
 pairwise_perm <- function(c,t,p=1999) {
@@ -130,13 +146,11 @@ pairwise_perm <- function(c,t,p=1999) {
     data.frame(
       assess_class_grp = c,
       comparison = paste(sort(unique(df$treatment)), collapse = "_"),
-      adonis2(X ~ treatment, data = Y, permutations = p, method = "bray", sqrt.dist = TRUE, strata = Y$block)
+      adonis2(scale(X) ~ treatment, data = Y, permutations = p, method = "euclidean", sqrt.dist = FALSE, strata = Y$block)
     )[1, ]
   out <- rbind(out, result)
   return(out)
 }
-
-
 assess_class_grp <- 
   data$terpene %>% 
   filter(mass_type == "dw") %>% 
@@ -147,51 +161,59 @@ assess_class_grp <-
 
 # Results
 
+See output table below.
+
 ``` r
+func_apply <- 
 list(
   lapply(assess_class_grp, pairwise_perm, t = "EMF"),
   lapply(assess_class_grp, pairwise_perm, t = "FFE"),
   lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
-) %>% 
+)
+```
+
+``` r
+result_tab <- 
+  func_apply %>% 
   bind_rows() %>% 
   mutate(p_val = `Pr..F.`,
-         p_val_adj = round(p.adjust(p_val, "BH"), 4)) %>% 
+         p_val_adj = round(p.adjust(p_val, "BH"), 4),
+         sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")) %>% 
   rownames_to_column(var = "delete") %>% 
   select(-delete, -`Pr..F.`, -Df, -SumOfSqs) %>%
   separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>% 
-  arrange(resistance_class, assessment, comparison) %>% 
-  kable(format = "pandoc", caption = "Pairwise comparisons of terpene composition done by permutation (n=1999);\np-values corrected by the Benjamini-Hochberg method.")
+  arrange(resistance_class, assessment, comparison)
 ```
 
-| assessment | resistance_class | comparison      |        R2 |         F |  p_val | p_val_adj |
-|:-----------|:-----------------|:----------------|----------:|----------:|-------:|----------:|
-| pre_rust   | MGR              | Control_EMF     | 0.0410018 | 0.9406068 | 0.4305 |    0.5054 |
-| pre_rust   | MGR              | Control_FFE     | 0.0381303 | 0.8721202 | 0.4660 |    0.5242 |
-| pre_rust   | MGR              | Control_FFE+EMF | 0.0459923 | 1.0606105 | 0.3045 |    0.4952 |
-| rust_ctrl  | MGR              | Control_EMF     | 0.2125377 | 4.8582376 | 0.0020 |    0.0180 |
-| rust_ctrl  | MGR              | Control_FFE     | 0.1013487 | 2.0300160 | 0.0135 |    0.0729 |
-| rust_ctrl  | MGR              | Control_FFE+EMF | 0.0944837 | 1.8781614 | 0.0235 |    0.0906 |
-| rust_inoc  | MGR              | Control_EMF     | 0.0545830 | 1.0392177 | 0.3385 |    0.4952 |
-| rust_inoc  | MGR              | Control_FFE     | 0.0294264 | 0.5154153 | 0.9370 |    0.9370 |
-| rust_inoc  | MGR              | Control_FFE+EMF | 0.0679079 | 1.3113962 | 0.1465 |    0.3596 |
-| pre_rust   | QDR              | Control_EMF     | 0.0136975 | 0.9721424 | 0.3920 |    0.5040 |
-| pre_rust   | QDR              | Control_FFE     | 0.0104603 | 0.7399614 | 0.7235 |    0.7814 |
-| pre_rust   | QDR              | Control_FFE+EMF | 0.0216842 | 1.5515344 | 0.0910 |    0.2457 |
-| rust_ctrl  | QDR              | Control_EMF     | 0.0439581 | 2.6208154 | 0.0030 |    0.0203 |
-| rust_ctrl  | QDR              | Control_FFE     | 0.0378334 | 2.2806179 | 0.0185 |    0.0832 |
-| rust_ctrl  | QDR              | Control_FFE+EMF | 0.0181073 | 1.0695938 | 0.3385 |    0.4952 |
-| rust_inoc  | QDR              | Control_EMF     | 0.0170730 | 1.0074344 | 0.3790 |    0.5040 |
-| rust_inoc  | QDR              | Control_FFE     | 0.0182796 | 1.0985800 | 0.3175 |    0.4952 |
-| rust_inoc  | QDR              | Control_FFE+EMF | 0.0108282 | 0.6349106 | 0.8270 |    0.8588 |
-| pre_rust   | susceptible      | Control_EMF     | 0.0340174 | 1.6199053 | 0.0875 |    0.2457 |
-| pre_rust   | susceptible      | Control_FFE     | 0.0266680 | 1.2603374 | 0.1810 |    0.3863 |
-| pre_rust   | susceptible      | Control_FFE+EMF | 0.0228762 | 1.0769408 | 0.3485 |    0.4952 |
-| rust_ctrl  | susceptible      | Control_EMF     | 0.1106859 | 4.8540226 | 0.0005 |    0.0135 |
-| rust_ctrl  | susceptible      | Control_FFE     | 0.0853472 | 3.5458182 | 0.0020 |    0.0180 |
-| rust_ctrl  | susceptible      | Control_FFE+EMF | 0.0492522 | 1.9685403 | 0.0415 |    0.1401 |
-| rust_inoc  | susceptible      | Control_EMF     | 0.0282840 | 1.1060748 | 0.2895 |    0.4952 |
-| rust_inoc  | susceptible      | Control_FFE     | 0.0248817 | 0.9696325 | 0.4285 |    0.5054 |
-| rust_inoc  | susceptible      | Control_FFE+EMF | 0.0337154 | 1.3258888 | 0.1860 |    0.3863 |
+| assessment | resistance_class | comparison      |        R2 |         F |  p_val | p_val_adj | sig_05 |
+|:-----------|:-----------------|:----------------|----------:|----------:|-------:|----------:|:-------|
+| pre_rust   | MGR              | Control_EMF     | 0.0607611 |  1.423220 | 0.1250 |    0.1298 |        |
+| pre_rust   | MGR              | Control_FFE     | 0.0713347 |  1.689912 | 0.0725 |    0.0851 |        |
+| pre_rust   | MGR              | Control_FFE+EMF | 0.0617460 |  1.447809 | 0.0825 |    0.0928 |        |
+| rust_ctrl  | MGR              | Control_EMF     | 0.2743502 |  6.805353 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | MGR              | Control_FFE     | 0.2036794 |  4.603962 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | MGR              | Control_FFE+EMF | 0.1682921 |  3.642213 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | MGR              | Control_EMF     | 0.1625376 |  3.493502 | 0.0010 |    0.0017 | \*     |
+| rust_inoc  | MGR              | Control_FFE     | 0.1492610 |  2.982626 | 0.0010 |    0.0017 | \*     |
+| rust_inoc  | MGR              | Control_FFE+EMF | 0.1321500 |  2.740913 | 0.0080 |    0.0120 | \*     |
+| pre_rust   | QDR              | Control_EMF     | 0.0241587 |  1.732975 | 0.0905 |    0.0977 |        |
+| pre_rust   | QDR              | Control_FFE     | 0.0329685 |  2.386472 | 0.0250 |    0.0355 | \*     |
+| pre_rust   | QDR              | Control_FFE+EMF | 0.0272552 |  1.961318 | 0.0685 |    0.0841 |        |
+| rust_ctrl  | QDR              | Control_EMF     | 0.2136643 | 15.488123 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | QDR              | Control_FFE     | 0.1908055 | 13.676218 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | QDR              | Control_FFE+EMF | 0.0665173 |  4.132917 | 0.0010 |    0.0017 | \*     |
+| rust_inoc  | QDR              | Control_EMF     | 0.0922763 |  5.896096 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | QDR              | Control_FFE     | 0.0885755 |  5.733830 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | QDR              | Control_FFE+EMF | 0.0762155 |  4.785206 | 0.0005 |    0.0011 | \*     |
+| pre_rust   | susceptible      | Control_EMF     | 0.0461969 |  2.227982 | 0.0360 |    0.0486 | \*     |
+| pre_rust   | susceptible      | Control_FFE     | 0.0387840 |  1.856051 | 0.0605 |    0.0778 |        |
+| pre_rust   | susceptible      | Control_FFE+EMF | 0.0216899 |  1.019854 | 0.4040 |    0.4040 |        |
+| rust_ctrl  | susceptible      | Control_EMF     | 0.2891032 | 15.860283 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | susceptible      | Control_FFE     | 0.2051627 |  9.808526 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | susceptible      | Control_FFE+EMF | 0.0725307 |  2.971709 | 0.0050 |    0.0079 | \*     |
+| rust_inoc  | susceptible      | Control_EMF     | 0.1265003 |  5.503165 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | susceptible      | Control_FFE     | 0.0965334 |  4.060214 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | susceptible      | Control_FFE+EMF | 0.0965256 |  4.059851 | 0.0010 |    0.0017 | \*     |
 
 Pairwise comparisons of terpene composition done by permutation
 (n=1999); p-values corrected by the Benjamini-Hochberg method.
