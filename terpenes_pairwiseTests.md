@@ -30,12 +30,13 @@ brevity.
 ``` r
 # Package and library installation
 packages_needed <- c("tidyverse", "knitr", "vegan", "colorspace")
-packages_installed <- packages_needed %in% rownames(installed.packages())
+packages_installed <-
+  packages_needed %in% rownames(installed.packages())
 ```
 
 ``` r
-if (any(! packages_installed))
-  install.packages(packages_needed[! packages_installed])
+if (any(!packages_installed))
+  install.packages(packages_needed[!packages_installed])
 ```
 
 ``` r
@@ -61,7 +62,8 @@ source("data_etl.R")
 ```
 
 ``` r
-sapply(data, function(x) head(x, 2))
+sapply(data, function(x)
+  head(x, 2))
 ```
 
     ## $terpene_meta
@@ -124,38 +126,44 @@ to reduce the number of nested calls to `lapply()`. The variable is
 - distance metric: euclidean
 
 ``` r
-pairwise_perm <- function(c,t,p=1999) {
+pairwise_perm <- function(c, t, p = 1999) {
   out <- NULL
-  df <- data$terpene %>% 
-    mutate(assess_class_grp = paste(assessment, resistance_class, sep = "-")) %>% 
+  df <- data$terpene %>%
+    mutate(assess_class_grp = paste(assessment, resistance_class, sep = "-")) %>%
     filter(mass_type == "dw",
            assess_class_grp == c,
-           treatment %in% c("Control", t))%>% 
-    select(tree_ID, treatment, assessment, block, compound, mass) %>% 
-    pivot_wider(names_from = compound, values_from = mass, values_fill = 0)
-  X <- data.frame(
-    df %>% select(-treatment, -assessment, -block),
-    row.names = 1
-  )
-  Y <- data.frame(
-    df %>% select(tree_ID, treatment, block),
-    row.names = 1
-  )
+           treatment %in% c("Control", t)) %>%
+    select(tree_ID, treatment, assessment, block, compound, mass) %>%
+    pivot_wider(
+      names_from = compound,
+      values_from = mass,
+      values_fill = 0
+    )
+  X <- data.frame(df %>% select(-treatment,-assessment,-block),
+                  row.names = 1)
+  Y <- data.frame(df %>% select(tree_ID, treatment, block),
+                  row.names = 1)
   set.seed(146)
-  result <- 
+  result <-
     data.frame(
       assess_class_grp = c,
       comparison = paste(sort(unique(df$treatment)), collapse = "_"),
-      adonis2(scale(X) ~ treatment, data = Y, permutations = p, method = "euclidean", sqrt.dist = FALSE, strata = Y$block)
-    )[1, ]
+      adonis2(
+        scale(X) ~ treatment,
+        data = Y,
+        permutations = p,
+        method = "euclidean",
+        strata = Y$block
+      )
+    )[1,]
   out <- rbind(out, result)
   return(out)
 }
-assess_class_grp <- 
-  data$terpene %>% 
-  filter(mass_type == "dw") %>% 
-  mutate(class_assessment = paste(assessment, resistance_class, sep = "-")) %>% 
-  pull(class_assessment) %>% 
+assess_class_grp <-
+  data$terpene %>%
+  filter(mass_type == "dw") %>%
+  mutate(class_assessment = paste(assessment, resistance_class, sep = "-")) %>%
+  pull(class_assessment) %>%
   unique()
 ```
 
@@ -164,25 +172,27 @@ assess_class_grp <-
 See output table below.
 
 ``` r
-func_apply <- 
-list(
-  lapply(assess_class_grp, pairwise_perm, t = "EMF"),
-  lapply(assess_class_grp, pairwise_perm, t = "FFE"),
-  lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
-)
+func_apply <-
+  list(
+    lapply(assess_class_grp, pairwise_perm, t = "EMF"),
+    lapply(assess_class_grp, pairwise_perm, t = "FFE"),
+    lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
+  )
 ```
 
 ``` r
-result_tab <- 
-  func_apply %>% 
-  bind_rows() %>% 
-  mutate(p_val = `Pr..F.`,
-         p_val_adj = round(p.adjust(p_val, "BH"), 4),
-         sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")) %>% 
-  rownames_to_column(var = "delete") %>% 
-  select(-delete, -`Pr..F.`, -Df, -SumOfSqs) %>%
-  separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>% 
-  arrange(resistance_class, assessment, comparison)
+result_tab <-
+  func_apply %>%
+  bind_rows() %>%
+  mutate(
+    p_val = `Pr..F.`,
+    p_val_adj = round(p.adjust(p_val, "BH"), 4),
+    sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")
+  ) %>%
+  rownames_to_column(var = "delete") %>%
+  select(-delete,-`Pr..F.`,-Df,-SumOfSqs) %>%
+  separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>%
+  arrange(assessment, resistance_class, comparison)
 ```
 
 | assessment | resistance_class | comparison      |        R2 |         F |  p_val | p_val_adj | sig_05 |
@@ -190,27 +200,27 @@ result_tab <-
 | pre_rust   | MGR              | Control_EMF     | 0.0607611 |  1.423220 | 0.1250 |    0.1298 |        |
 | pre_rust   | MGR              | Control_FFE     | 0.0713347 |  1.689912 | 0.0725 |    0.0851 |        |
 | pre_rust   | MGR              | Control_FFE+EMF | 0.0617460 |  1.447809 | 0.0825 |    0.0928 |        |
-| rust_ctrl  | MGR              | Control_EMF     | 0.2743502 |  6.805353 | 0.0005 |    0.0011 | \*     |
-| rust_ctrl  | MGR              | Control_FFE     | 0.2036794 |  4.603962 | 0.0005 |    0.0011 | \*     |
-| rust_ctrl  | MGR              | Control_FFE+EMF | 0.1682921 |  3.642213 | 0.0005 |    0.0011 | \*     |
-| rust_inoc  | MGR              | Control_EMF     | 0.1625376 |  3.493502 | 0.0010 |    0.0017 | \*     |
-| rust_inoc  | MGR              | Control_FFE     | 0.1492610 |  2.982626 | 0.0010 |    0.0017 | \*     |
-| rust_inoc  | MGR              | Control_FFE+EMF | 0.1321500 |  2.740913 | 0.0080 |    0.0120 | \*     |
 | pre_rust   | QDR              | Control_EMF     | 0.0241587 |  1.732975 | 0.0905 |    0.0977 |        |
 | pre_rust   | QDR              | Control_FFE     | 0.0329685 |  2.386472 | 0.0250 |    0.0355 | \*     |
 | pre_rust   | QDR              | Control_FFE+EMF | 0.0272552 |  1.961318 | 0.0685 |    0.0841 |        |
-| rust_ctrl  | QDR              | Control_EMF     | 0.2136643 | 15.488123 | 0.0005 |    0.0011 | \*     |
-| rust_ctrl  | QDR              | Control_FFE     | 0.1908055 | 13.676218 | 0.0005 |    0.0011 | \*     |
-| rust_ctrl  | QDR              | Control_FFE+EMF | 0.0665173 |  4.132917 | 0.0010 |    0.0017 | \*     |
-| rust_inoc  | QDR              | Control_EMF     | 0.0922763 |  5.896096 | 0.0005 |    0.0011 | \*     |
-| rust_inoc  | QDR              | Control_FFE     | 0.0885755 |  5.733830 | 0.0005 |    0.0011 | \*     |
-| rust_inoc  | QDR              | Control_FFE+EMF | 0.0762155 |  4.785206 | 0.0005 |    0.0011 | \*     |
 | pre_rust   | susceptible      | Control_EMF     | 0.0461969 |  2.227982 | 0.0360 |    0.0486 | \*     |
 | pre_rust   | susceptible      | Control_FFE     | 0.0387840 |  1.856051 | 0.0605 |    0.0778 |        |
 | pre_rust   | susceptible      | Control_FFE+EMF | 0.0216899 |  1.019854 | 0.4040 |    0.4040 |        |
+| rust_ctrl  | MGR              | Control_EMF     | 0.2743502 |  6.805353 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | MGR              | Control_FFE     | 0.2036794 |  4.603962 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | MGR              | Control_FFE+EMF | 0.1682921 |  3.642213 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | QDR              | Control_EMF     | 0.2136643 | 15.488123 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | QDR              | Control_FFE     | 0.1908055 | 13.676218 | 0.0005 |    0.0011 | \*     |
+| rust_ctrl  | QDR              | Control_FFE+EMF | 0.0665173 |  4.132917 | 0.0010 |    0.0017 | \*     |
 | rust_ctrl  | susceptible      | Control_EMF     | 0.2891032 | 15.860283 | 0.0005 |    0.0011 | \*     |
 | rust_ctrl  | susceptible      | Control_FFE     | 0.2051627 |  9.808526 | 0.0005 |    0.0011 | \*     |
 | rust_ctrl  | susceptible      | Control_FFE+EMF | 0.0725307 |  2.971709 | 0.0050 |    0.0079 | \*     |
+| rust_inoc  | MGR              | Control_EMF     | 0.1625376 |  3.493502 | 0.0010 |    0.0017 | \*     |
+| rust_inoc  | MGR              | Control_FFE     | 0.1492610 |  2.982626 | 0.0010 |    0.0017 | \*     |
+| rust_inoc  | MGR              | Control_FFE+EMF | 0.1321500 |  2.740913 | 0.0080 |    0.0120 | \*     |
+| rust_inoc  | QDR              | Control_EMF     | 0.0922763 |  5.896096 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | QDR              | Control_FFE     | 0.0885755 |  5.733830 | 0.0005 |    0.0011 | \*     |
+| rust_inoc  | QDR              | Control_FFE+EMF | 0.0762155 |  4.785206 | 0.0005 |    0.0011 | \*     |
 | rust_inoc  | susceptible      | Control_EMF     | 0.1265003 |  5.503165 | 0.0005 |    0.0011 | \*     |
 | rust_inoc  | susceptible      | Control_FFE     | 0.0965334 |  4.060214 | 0.0005 |    0.0011 | \*     |
 | rust_inoc  | susceptible      | Control_FFE+EMF | 0.0965256 |  4.059851 | 0.0010 |    0.0017 | \*     |
