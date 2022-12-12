@@ -45,8 +45,14 @@ sapply(data, function(x) head(x, 2))
 #' each resistance class (permutations = 1999). The test is run on individual trees; the ordination figures show
 #' centroids and standard errors for assessment and treatment groups. Supplemental ordinations of 
 #' terpene compounds are also shown. 
+#' 
+#' ## Terms
+#' - permutations = 19999
+#' - data standardization: standardize columns (scale x to zero mean and unit variance)
+#' - distance metric: euclidean
+#' - ordination: PCA
 #+ perm_pcoa_function
-terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3, p = 1999) {
+terpene_pcoa <- function(c, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3, p = 1999) {
   
   cat("---------------------------------------------------------------------\n")
   cat(paste("Resistance type", c, "selected."))
@@ -167,5 +173,3 @@ terpene_pcoa("MGR")
 #' ## Quantitative gene resistance class seedlings
 #+ qdr_test,echo=FALSE
 terpene_pcoa("QDR")
-
-

@@ -8,6 +8,8 @@ Beau Larkin
   id="toc-package-and-library-installation">Package and library
   installation</a>
 - <a href="#data" id="toc-data">Data</a>
+- <a href="#functions" id="toc-functions">Functions</a>
+  - <a href="#terms" id="toc-terms">Terms</a>
 - <a href="#results" id="toc-results">Results</a>
   - <a href="#susceptible-resistance-class-seedlings"
     id="toc-susceptible-resistance-class-seedlings">Susceptible resistance
@@ -107,7 +109,7 @@ sapply(data, function(x) head(x, 2))
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
 
-# Results
+# Functions
 
 The following function produces the permutation tests and visual
 ordination figures for each resistance class (permutations = 1999). The
@@ -115,73 +117,77 @@ test is run on individual trees; the ordination figures show centroids
 and standard errors for assessment and treatment groups. Supplemental
 ordinations of terpene compounds are also shown.
 
-``` r
-terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3) {
+## Terms
 
+- permutations = 19999
+- data standardization: standardize columns (scale x to zero mean and
+  unit variance)
+- distance metric: euclidean
+- ordination: PCA
+
+``` r
+terpene_pcoa <- function(c, bar_wd = 0.008, bar_sz = 0.2, pt_sz = 3, p = 1999) {
+  
   cat("---------------------------------------------------------------------\n")
   cat(paste("Resistance type", c, "selected."))
   cat("\n---------------------------------------------------------------------\n")
   
   # Load styles inside function
   source("gg_style.txt")
-
+  
   df <- data$terpene %>%
     filter(mass_type == "dw",
            resistance_class == c) %>%
     mutate(tree_key = paste(tree_ID, year, sep = "-")) %>%
     select(tree_key, treatment, assessment, compound, mass) %>%
     pivot_wider(names_from = compound, values_from = mass, values_fill = 0)
-  terp <-
+  X <-
     data.frame(df %>% select(-treatment, -assessment), row.names = 1)
-  expl <- data.frame(df %>% select(treatment, assessment))
+  Y <- data.frame(df %>% select(treatment, assessment))
   set.seed(123)
   perm_test <-
     adonis2(
-      terp ~ assessment * treatment,
-      data = expl,
-      permutations = 1999,
-      method = "bray",
-      sqrt.dist = TRUE,
-      by = "terms"
+      scale(X) ~ assessment * treatment,
+      data = Y,
+      permutations = p,
+      method = "euclidean"
     )
-
-  terp_bray <- vegdist(terp, "bray")
-  terp_pcoa <-
-    cmdscale(sqrt(terp_bray), k = (nrow(terp) - 1), eig = TRUE)
+  
+  terp_pca <- rda(X, scale = TRUE)
   sites <-
-    data.frame(scores(terp_pcoa, "sites", choices = c(1, 2))) %>%
+    data.frame(scores(terp_pca, "sites", choices = c(1, 2))) %>%
     rownames_to_column(var = "tree_key") %>%
     left_join(df %>% select(tree_key, treatment, assessment), by = "tree_key")
   site_centers <-
     sites %>%
     group_by(assessment, treatment) %>%
-    summarize(Dim1_mean = mean(Dim1),
-              Dim1_se_pos = Dim1_mean + (sd(Dim1) / sqrt(length(Dim1))),
-              Dim1_se_neg = Dim1_mean - (sd(Dim1) / sqrt(length(Dim1))),
-              Dim2_mean = mean(Dim2),
-              Dim2_se_pos = Dim2_mean + (sd(Dim2) / sqrt(length(Dim2))),
-              Dim2_se_neg = Dim2_mean - (sd(Dim2) / sqrt(length(Dim2))),
+    summarize(PC1_mean = mean(PC1),
+              PC1_se_pos = PC1_mean + (sd(PC1) / sqrt(length(PC1))),
+              PC1_se_neg = PC1_mean - (sd(PC1) / sqrt(length(PC1))),
+              PC2_mean = mean(PC2),
+              PC2_se_pos = PC2_mean + (sd(PC2) / sqrt(length(PC2))),
+              PC2_se_neg = PC2_mean - (sd(PC2) / sqrt(length(PC2))),
               .groups = "drop")
   labs_pct <-
-    round((terp_pcoa$eig / sum(terp_pcoa$eig))[1:2] * 100, 0)
-  terp_wa <-
-    data.frame(wascores(terp_pcoa$points[, 1:2], terp, expand = FALSE)) %>%
+    round((terp_pca$CA$eig / sum(terp_pca$CA$eig))[1:2] * 100, 0)
+  terp_centers <-
+    data.frame(scores(terp_pca, "species", choices = c(1,2))) %>%
     rownames_to_column(var = "compound")
-
-  bar_width_d1 <- with(site_centers, max(Dim1_se_pos) - min(Dim1_se_neg)) * bar_wd
-  bar_width_d2 <- with(site_centers, max(Dim2_se_pos) - min(Dim2_se_neg)) * bar_wd
-
+  
+  bar_width_d1 <- with(site_centers, max(PC1_se_pos) - min(PC1_se_neg)) * bar_wd
+  bar_width_d2 <- with(site_centers, max(PC2_se_pos) - min(PC2_se_neg)) * bar_wd
+  
   plot_ord <-
-    ggplot(site_centers, aes(x = Dim1_mean, y = Dim2_mean)) +
+    ggplot(site_centers, aes(x = PC1_mean, y = PC2_mean)) +
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     geom_errorbar(
-      aes(x = Dim1_mean, ymin = Dim2_se_neg, ymax = Dim2_se_pos),
+      aes(x = PC1_mean, ymin = PC2_se_neg, ymax = PC2_se_pos),
       width = bar_width_d1,
       size = bar_sz
     ) +
     geom_errorbar(
-      aes(y = Dim2_mean, xmin = Dim1_se_neg, xmax = Dim1_se_pos),
+      aes(y = PC2_mean, xmin = PC1_se_neg, xmax = PC1_se_pos),
       width = bar_width_d2,
       size = bar_sz
     ) +
@@ -190,8 +196,8 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       size = pt_sz,
       stroke = bar_sz) +
     labs(
-      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
-      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
       title = paste0("Terpenes in ", c, " families")
     ) +
     scale_shape_manual(name = "Assessment", values = c(21,22,24)) +
@@ -199,13 +205,9 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     guides(fill = guide_legend(override.aes = list(shape = 21)),
            shape = guide_legend(override.aes = list(fill = "gray50"))) +
     theme_bgl
-
-  out <- list(
-    permutation_test_result = perm_test
-  )
   
   plot_compounds <- 
-    ggplot(terp_wa, aes(x = X1, y = X2)) +
+    ggplot(terp_centers, aes(x = PC1, y = PC2)) +
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 0, linetype = "dotted") +
     geom_label(
@@ -214,20 +216,30 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
       size = 8 * 0.36
     ) +
     labs(
-      x = paste0("Dimension 1, ", labs_pct[1], "% variation explained"),
-      y = paste0("Dimension 2, ", labs_pct[2], "% variation explained"),
+      x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
+      y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
       title = paste0("Terpenes in ", c, " families")
     ) +
     theme_bgl
   
+  out <- list(
+    permutation_test_result = perm_test
+  )
+  
   #+ figure_ordination
   print(plot_ord)
   print(plot_compounds)
-
+  
   return(out)
-
+  
 }
 ```
+
+# Results
+
+Use of standardized terpene masses in a euclidean distance matrix
+greatly improves clustering and increases separation in a permutation
+test.
 
 ## Susceptible resistance class seedlings
 
@@ -243,13 +255,13 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
-    ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## assessment             2    1.486 0.04561 5.8021 0.0005 ***
-    ## treatment              3    0.853 0.02619 2.2208 0.0005 ***
-    ## assessment:treatment   6    0.916 0.02810 1.1915 0.1185    
-    ## Residual             229   29.328 0.90010                  
-    ## Total                240   32.583 1.00000                  
+    ## adonis2(formula = scale(X) ~ assessment * treatment, data = Y, permutations = p, method = "euclidean")
+    ##                       Df SumOfSqs      R2       F Pr(>F)    
+    ## assessment             2   1380.6 0.21306 35.6175  5e-04 ***
+    ## treatment              3    325.7 0.05026  5.6008  5e-04 ***
+    ## assessment:treatment   6    335.3 0.05175  2.8837  5e-04 ***
+    ## Residual             229   4438.4 0.68493                   
+    ## Total                240   6480.0 1.00000                   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -267,13 +279,13 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
-    ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## assessment             2   1.0920 0.07197 4.6314 0.0005 ***
-    ## treatment              3   0.5625 0.03707 1.5904 0.0180 *  
-    ## assessment:treatment   6   0.9040 0.05958 1.2780 0.0505 .  
-    ## Residual             107  12.6144 0.83138                  
-    ## Total                118  15.1729 1.00000                  
+    ## adonis2(formula = scale(X) ~ assessment * treatment, data = Y, permutations = p, method = "euclidean")
+    ##                       Df SumOfSqs      R2       F Pr(>F)    
+    ## assessment             2    737.1 0.23134 19.9015  5e-04 ***
+    ## treatment              3    211.5 0.06637  3.8067  5e-04 ***
+    ## assessment:treatment   6    256.1 0.08038  2.3051  5e-04 ***
+    ## Residual             107   1981.4 0.62190                   
+    ## Total                118   3186.0 1.00000                   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -291,12 +303,12 @@ terpene_pcoa <- function(c, dim1_exp = 1, dim2_exp = 1, bar_wd = 0.008, bar_sz =
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = terp ~ assessment * treatment, data = expl, permutations = 1999, method = "bray", sqrt.dist = TRUE, by = "terms")
-    ##                       Df SumOfSqs      R2      F Pr(>F)    
-    ## assessment             2    2.618 0.05099 9.7065 0.0005 ***
-    ## treatment              3    0.876 0.01706 2.1652 0.0010 ***
-    ## assessment:treatment   6    0.919 0.01790 1.1358 0.1880    
-    ## Residual             348   46.930 0.91405                  
-    ## Total                359   51.342 1.00000                  
+    ## adonis2(formula = scale(X) ~ assessment * treatment, data = Y, permutations = p, method = "euclidean")
+    ##                       Df SumOfSqs      R2       F Pr(>F)    
+    ## assessment             2   1924.6 0.19855 48.6438  5e-04 ***
+    ## treatment              3    408.4 0.04213  6.8814  5e-04 ***
+    ## assessment:treatment   6    475.8 0.04909  4.0085  5e-04 ***
+    ## Residual             348   6884.2 0.71023                   
+    ## Total                359   9693.0 1.00000                   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
