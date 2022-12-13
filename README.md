@@ -3,7 +3,7 @@ Analysis of western white pine (*Pinus monitcola*) terpenes in response to blist
 
 ## Source data
 The [Database]() directory contains raw csv files which are extracted, transformed, and loaded by [data_etl.md](data_etl.R). The ETL script is called separately in each analysis script for brevity.
-- Raw script: [data_etl.R[(data_etl.md)
+- Raw script: [data_etl.R](data_etl.md)
 
 ## Global ordination and permutation tests
 Ordinations of class centroids for each resistance class of seedlings. Locations based on all terpene compounds. Permutation tests conducted with `adonis2()` and 1999 permutations. 
