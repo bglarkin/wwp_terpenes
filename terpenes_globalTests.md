@@ -117,6 +117,7 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
+    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
@@ -354,19 +355,31 @@ g_Y <-
 
 ``` r
 set.seed(123)
-g_perm_test <-
+print(
   adonis2(
     scale(g_X) ~ resistance_class * assessment * treatment,
     data = g_Y,
     permutations = 1999,
     method = "euclidean"
   )
+)
 ```
 
-<div data-pagedtable="false">
-
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["SumOfSqs"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["R2"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"964.6946","3":"0.049693228","4":"26.2397705","5":"0.0005","_rn_":"resistance_class"},{"1":"2","2":"3761.6817","3":"0.193771274","4":"102.3180412","5":"0.0005","_rn_":"assessment"},{"1":"3","2":"692.7721","3":"0.035685986","4":"12.5623032","5":"0.0005","_rn_":"treatment"},{"1":"4","2":"204.7847","3":"0.010548842","4":"2.7850795","5":"0.0005","_rn_":"resistance_class:assessment"},{"1":"6","2":"176.8645","3":"0.009110624","4":"1.6035766","5":"0.0065","_rn_":"resistance_class:treatment"},{"1":"6","2":"839.4616","3":"0.043242237","4":"7.6111402","5":"0.0005","_rn_":"assessment:treatment"},{"1":"12","2":"199.2480","3":"0.010263638","4":"0.9032602","5":"0.7555","_rn_":"resistance_class:assessment:treatment"},{"1":"684","2":"12573.4928","3":"0.647684171","4":"NA","5":"NA","_rn_":"Residual"},{"1":"719","2":"19413.0000","3":"1.000000000","4":"NA","5":"NA","_rn_":"Total"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-
-</div>
+    ## Permutation test for adonis under reduced model
+    ## Terms added sequentially (first to last)
+    ## Permutation: free
+    ## Number of permutations: 1999
+    ## 
+    ## adonis2(formula = scale(g_X) ~ resistance_class * assessment * treatment, data = g_Y, permutations = 1999, method = "euclidean")
+    ##                                        Df SumOfSqs      R2        F Pr(>F)    
+    ## resistance_class                        2    964.7 0.04969  26.2398 0.0005 ***
+    ## assessment                              2   3761.7 0.19377 102.3180 0.0005 ***
+    ## treatment                               3    692.8 0.03569  12.5623 0.0005 ***
+    ## resistance_class:assessment             4    204.8 0.01055   2.7851 0.0005 ***
+    ## resistance_class:treatment              6    176.9 0.00911   1.6036 0.0065 ** 
+    ## assessment:treatment                    6    839.5 0.04324   7.6111 0.0005 ***
+    ## resistance_class:assessment:treatment  12    199.2 0.01026   0.9033 0.7555    
+    ## Residual                              684  12573.5 0.64768                    
+    ## Total                                 719  19413.0 1.00000                    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

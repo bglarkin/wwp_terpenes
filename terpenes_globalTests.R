@@ -205,14 +205,13 @@ g_X <-
              row.names = 1)
 g_Y <-
   data.frame(g_df %>% select(resistance_class, treatment, assessment))
-#+ global_perm_test
+#+ global_perm
 set.seed(123)
-g_perm_test <-
+print(
   adonis2(
     scale(g_X) ~ resistance_class * assessment * treatment,
     data = g_Y,
     permutations = 1999,
     method = "euclidean"
   )
-#+ global_perm_test_table,echo=FALSE
-g_perm_test
+)
