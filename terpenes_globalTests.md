@@ -362,3 +362,11 @@ g_perm_test <-
     method = "euclidean"
   )
 ```
+
+<div data-pagedtable="false">
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["SumOfSqs"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["R2"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["Pr(>F)"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"964.6946","3":"0.049693228","4":"26.2397705","5":"0.0005","_rn_":"resistance_class"},{"1":"2","2":"3761.6817","3":"0.193771274","4":"102.3180412","5":"0.0005","_rn_":"assessment"},{"1":"3","2":"692.7721","3":"0.035685986","4":"12.5623032","5":"0.0005","_rn_":"treatment"},{"1":"4","2":"204.7847","3":"0.010548842","4":"2.7850795","5":"0.0005","_rn_":"resistance_class:assessment"},{"1":"6","2":"176.8645","3":"0.009110624","4":"1.6035766","5":"0.0065","_rn_":"resistance_class:treatment"},{"1":"6","2":"839.4616","3":"0.043242237","4":"7.6111402","5":"0.0005","_rn_":"assessment:treatment"},{"1":"12","2":"199.2480","3":"0.010263638","4":"0.9032602","5":"0.7555","_rn_":"resistance_class:assessment:treatment"},{"1":"684","2":"12573.4928","3":"0.647684171","4":"NA","5":"NA","_rn_":"Residual"},{"1":"719","2":"19413.0000","3":"1.000000000","4":"NA","5":"NA","_rn_":"Total"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+</div>

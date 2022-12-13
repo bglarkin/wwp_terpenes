@@ -214,4 +214,5 @@ g_perm_test <-
     permutations = 1999,
     method = "euclidean"
   )
+#+ global_perm_test_table,echo=FALSE
 g_perm_test
