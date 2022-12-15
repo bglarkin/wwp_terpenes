@@ -11,9 +11,11 @@ Ordinations of class centroids for each resistance class of seedlings. Locations
 - Raw script: [terpenes_globalTests.R](terpenes_globalTests.R)
 
 ## Pairwise comparisons
-Permutation tests are used to test pairwise multivariate differences in terpene composition
+1. Permutation tests are used to test pairwise multivariate differences in terpene composition
 within resistance classes and assessments, and between symbiont controls and treatments. The tests are 
 permuted within experimental greenhouse blocks.
+2. Permutations tests as in #1, but between induced and control seedlings after the rust inoculation step
+(**rust_inoc** vs. **rust_ctrl**)
 - Report format: [terpenes_pairwiseTests.md](terpenes_pairwiseTests.md)
 - Raw script: [terpenes_pairwiseTests.R](terpenes_pairwiseTests.R)
 
