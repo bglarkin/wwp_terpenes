@@ -8,10 +8,24 @@ Beau Larkin
   id="toc-package-and-library-installation">Package and library
   installation</a>
 - <a href="#data" id="toc-data">Data</a>
-- <a href="#pairwise-comparisons-function"
-  id="toc-pairwise-comparisons-function">Pairwise comparisons function</a>
-  - <a href="#terms" id="toc-terms">Terms</a>
+- <a href="#functions" id="toc-functions">Functions</a>
+  - <a href="#pairwise-comparisons-treatments-vs-controls-in-all-groups"
+    id="toc-pairwise-comparisons-treatments-vs-controls-in-all-groups">Pairwise
+    comparisons: treatments vs. controls in all groups</a>
+    - <a href="#terms" id="toc-terms">Terms</a>
+  - <a
+    href="#pairwise-comparisons-induced-vs-control-in-resistance-classes-and-treatments"
+    id="toc-pairwise-comparisons-induced-vs-control-in-resistance-classes-and-treatments">Pairwise
+    comparisons: induced vs. control in resistance classes and
+    treatments</a>
+    - <a href="#terms-1" id="toc-terms-1">Terms</a>
 - <a href="#results" id="toc-results">Results</a>
+  - <a href="#pairwise-treatment-comparisons"
+    id="toc-pairwise-treatment-comparisons">Pairwise treatment
+    comparisons</a>
+  - <a href="#pairwise-induced-vs-controls-comparisons"
+    id="toc-pairwise-induced-vs-controls-comparisons">Pairwise induced
+    vs. controls comparisons</a>
 
 # Description
 
@@ -106,27 +120,25 @@ sapply(data, function(x)
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
 
-# Pairwise comparisons function
+# Functions
 
-This function produces pairwise group comparisons between fungal
-controls and treatments for each pairwise comparison among assessments
-and resistance classes. A permutation test is used in each comparison,
-using a blocks as strata in the model, and a correction is made to
-p-values due to the number of comparisons being done.
+## Pairwise comparisons: treatments vs. controls in all groups
 
-A dummy variable combining assessments and resistance_classes is needed
-to reduce the number of nested calls to `lapply()`. The variable is
-`assess_class_grp`, below.
+This function produces group comparisons between fungal controls and
+treatments for each pairwise comparison among assessments and resistance
+classes. A permutation test is used in each comparison, using a blocks
+as strata in the model, and a correction is made to p-values due to the
+number of comparisons being done.
 
-## Terms
+### Terms
 
-- permutations = 19999
+- permutations = 1999
 - data standardization: standardize columns (scale x to zero mean and
   unit variance)
 - distance metric: euclidean
 
 ``` r
-pairwise_perm <- function(c, t, p = 1999) {
+pairwise_trt <- function(c, t, p = 1999) {
   out <- NULL
   df <- data$terpene %>%
     mutate(assess_class_grp = paste(assessment, resistance_class, sep = "-")) %>%
@@ -159,6 +171,68 @@ pairwise_perm <- function(c, t, p = 1999) {
   out <- rbind(out, result)
   return(out)
 }
+```
+
+## Pairwise comparisons: induced vs. control in resistance classes and treatments
+
+This functions provides group comparisons between induced and control
+seedlings (**rust_inoc** vs. **rust_ctrl**) for each pairwise comparison
+among resistance classes and treatments. A permutation test is used for
+each comparison, and no strata are used due to the incomplete design.
+P-values are corrected due to the number of comparisons being made.
+
+### Terms
+
+- permutations = 1999
+- data standardization: standardize columns (scale x to zero mean and
+  unit variance)
+- distance metric: euclidean
+
+``` r
+pairwise_rust <- function(rc, t, p=1999) {
+  out <- NULL
+  df <- data$terpene %>%
+    filter(mass_type == "dw",
+           assessment != "pre_rust",
+           resistance_class == rc,
+           treatment == t) %>%
+    select(tree_ID, treatment, assessment, compound, mass) %>%
+    pivot_wider(
+      names_from = compound,
+      values_from = mass,
+      values_fill = 0
+    )
+  X <- data.frame(df %>% select(-treatment,-assessment),
+                  row.names = 1)
+  Y <- data.frame(df %>% select(tree_ID, treatment, assessment),
+                  row.names = 1)
+  set.seed(146)
+  result <-
+    data.frame(
+      resistance_class = rc,
+      treatment = t,
+      comparison = paste(sort(unique(df$assessment)), collapse = "-"),
+      adonis2(
+        scale(X) ~ assessment,
+        data = Y,
+        permutations = p,
+        method = "euclidean"
+      )
+    )[1,]
+  out <- rbind(out, result)
+  return(out)
+}
+```
+
+# Results
+
+## Pairwise treatment comparisons
+
+A dummy variable combining assessments and resistance_classes is needed
+to reduce the number of nested calls to `lapply()`. The variable is
+`assess_class_grp`:
+
+``` r
 assess_class_grp <-
   data$terpene %>%
   filter(mass_type == "dw") %>%
@@ -167,22 +241,20 @@ assess_class_grp <-
   unique()
 ```
 
-# Results
-
 See output table below.
 
 ``` r
-func_apply <-
+pairwise_trt_apply <-
   list(
-    lapply(assess_class_grp, pairwise_perm, t = "EMF"),
-    lapply(assess_class_grp, pairwise_perm, t = "FFE"),
-    lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
+    lapply(assess_class_grp, pairwise_trt, t = "EMF"),
+    lapply(assess_class_grp, pairwise_trt, t = "FFE"),
+    lapply(assess_class_grp, pairwise_trt, t = "FFE+EMF")
   )
 ```
 
 ``` r
-result_tab <-
-  func_apply %>%
+pairwise_trt_tab <-
+  pairwise_trt_apply %>%
   bind_rows() %>%
   mutate(
     p_val = `Pr..F.`,
@@ -224,6 +296,58 @@ result_tab <-
 | rust_inoc  | susceptible      | Control_EMF     | 0.1265003 |  5.503165 | 0.0005 |    0.0011 | \*     |
 | rust_inoc  | susceptible      | Control_FFE     | 0.0965334 |  4.060214 | 0.0005 |    0.0011 | \*     |
 | rust_inoc  | susceptible      | Control_FFE+EMF | 0.0965256 |  4.059851 | 0.0010 |    0.0017 | \*     |
+
+Pairwise comparisons of terpene composition done by permutation
+(n=1999); p-values corrected by the Benjamini-Hochberg method.
+
+## Pairwise induced vs. controls comparisons
+
+The variable `resistance_classes` is used to pass these strings to the
+function via `lapply()`:
+
+``` r
+resistance_classes <- c("QDR", "susceptible", "MGR")
+```
+
+See output table below.
+
+``` r
+pairwise_rust_apply <- 
+  list(
+    lapply(resistance_classes, pairwise_rust, t="EMF"),
+    lapply(resistance_classes, pairwise_rust, t="FFE"),
+    lapply(resistance_classes, pairwise_rust, t="FFE+EMF"),
+    lapply(resistance_classes, pairwise_rust, t="Control")
+  )
+```
+
+``` r
+pairwise_rust_tab <-
+  pairwise_rust_apply %>%
+  bind_rows() %>%
+  mutate(
+    p_val = `Pr..F.`,
+    p_val_adj = round(p.adjust(p_val, "BH"), 4),
+    sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")
+  ) %>%
+  rownames_to_column(var = "delete") %>%
+  select(-delete,-`Pr..F.`,-Df,-SumOfSqs)
+```
+
+| resistance_class | treatment | comparison          |        R2 |         F |  p_val | p_val_adj | sig_05 |
+|:-----------------|:----------|:--------------------|----------:|----------:|-------:|----------:|:-------|
+| QDR              | EMF       | rust_ctrl-rust_inoc | 0.0477863 |  2.860511 | 0.0225 |    0.0245 | \*     |
+| susceptible      | EMF       | rust_ctrl-rust_inoc | 0.0731100 |  3.076188 | 0.0115 |    0.0138 | \*     |
+| MGR              | EMF       | rust_ctrl-rust_inoc | 0.1121037 |  2.272638 | 0.0315 |    0.0315 | \*     |
+| QDR              | FFE       | rust_ctrl-rust_inoc | 0.1101377 |  7.302397 | 0.0005 |    0.0008 | \*     |
+| susceptible      | FFE       | rust_ctrl-rust_inoc | 0.1035787 |  4.390784 | 0.0005 |    0.0008 | \*     |
+| MGR              | FFE       | rust_ctrl-rust_inoc | 0.1433767 |  2.845363 | 0.0060 |    0.0080 | \*     |
+| QDR              | FFE+EMF   | rust_ctrl-rust_inoc | 0.1072669 |  6.969028 | 0.0005 |    0.0008 | \*     |
+| susceptible      | FFE+EMF   | rust_ctrl-rust_inoc | 0.1656554 |  7.544731 | 0.0005 |    0.0008 | \*     |
+| MGR              | FFE+EMF   | rust_ctrl-rust_inoc | 0.1723180 |  3.747484 | 0.0005 |    0.0008 | \*     |
+| QDR              | Control   | rust_ctrl-rust_inoc | 0.1814528 | 12.857248 | 0.0005 |    0.0008 | \*     |
+| susceptible      | Control   | rust_ctrl-rust_inoc | 0.1887296 |  8.840117 | 0.0005 |    0.0008 | \*     |
+| MGR              | Control   | rust_ctrl-rust_inoc | 0.2218512 |  5.131824 | 0.0005 |    0.0008 | \*     |
 
 Pairwise comparisons of terpene composition done by permutation
 (n=1999); p-values corrected by the Benjamini-Hochberg method.

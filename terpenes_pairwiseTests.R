@@ -44,23 +44,20 @@ source("data_etl.R")
 sapply(data, function(x)
   head(x, 2))
 #'
-#' # Pairwise comparisons function
-#' This function produces pairwise group comparisons between fungal controls and treatments
+#' # Functions
+#' ## Pairwise comparisons: treatments vs. controls in all groups
+#' This function produces group comparisons between fungal controls and treatments
 #' for each pairwise comparison among assessments and resistance classes. A permutation test is
 #' used in each comparison, using a blocks as strata in the model,
 #' and a correction is made to p-values due to the number of comparisons
 #' being done.
 #'
-#'
-#' A dummy variable combining assessments and resistance_classes is needed to reduce the number of nested calls to `lapply()`.
-#' The variable is `assess_class_grp`, below.
-#'
-#' ## Terms
-#' - permutations = 19999
+#' ### Terms
+#' - permutations = 1999
 #' - data standardization: standardize columns (scale x to zero mean and unit variance)
 #' - distance metric: euclidean
-#+ pairwise_perm_function
-pairwise_perm <- function(c, t, p = 1999) {
+#+ pairwise_trt_function
+pairwise_trt <- function(c, t, p = 1999) {
   out <- NULL
   df <- data$terpene %>%
     mutate(assess_class_grp = paste(assessment, resistance_class, sep = "-")) %>%
@@ -93,25 +90,75 @@ pairwise_perm <- function(c, t, p = 1999) {
   out <- rbind(out, result)
   return(out)
 }
+#' 
+#' ## Pairwise comparisons: induced vs. control in resistance classes and treatments
+#' This functions provides group comparisons between induced and control 
+#' seedlings (**rust_inoc** vs. **rust_ctrl**) for each pairwise comparison among resistance classes
+#' and treatments. A permutation test
+#' is used for each comparison, and no strata are used due to the incomplete design. P-values
+#' are corrected due to the number of comparisons being made.
+#'
+#' ### Terms
+#' - permutations = 1999
+#' - data standardization: standardize columns (scale x to zero mean and unit variance)
+#' - distance metric: euclidean
+pairwise_rust <- function(rc, t, p=1999) {
+  out <- NULL
+  df <- data$terpene %>%
+    filter(mass_type == "dw",
+           assessment != "pre_rust",
+           resistance_class == rc,
+           treatment == t) %>%
+    select(tree_ID, treatment, assessment, compound, mass) %>%
+    pivot_wider(
+      names_from = compound,
+      values_from = mass,
+      values_fill = 0
+    )
+  X <- data.frame(df %>% select(-treatment,-assessment),
+                  row.names = 1)
+  Y <- data.frame(df %>% select(tree_ID, treatment, assessment),
+                  row.names = 1)
+  set.seed(146)
+  result <-
+    data.frame(
+      resistance_class = rc,
+      treatment = t,
+      comparison = paste(sort(unique(df$assessment)), collapse = "-"),
+      adonis2(
+        scale(X) ~ assessment,
+        data = Y,
+        permutations = p,
+        method = "euclidean"
+      )
+    )[1,]
+  out <- rbind(out, result)
+  return(out)
+}
+#' 
+#' # Results
+#' ## Pairwise treatment comparisons
+#' A dummy variable combining assessments and resistance_classes is needed to reduce the number of nested calls to `lapply()`.
+#' The variable is `assess_class_grp`:
+#+ assess_class_grp
 assess_class_grp <-
   data$terpene %>%
   filter(mass_type == "dw") %>%
   mutate(class_assessment = paste(assessment, resistance_class, sep = "-")) %>%
   pull(class_assessment) %>%
   unique()
-
-#' # Results
+#' 
 #' See output table below.
-#+ func_apply
-func_apply <-
+#+ pairwise_trt_apply
+pairwise_trt_apply <-
   list(
-    lapply(assess_class_grp, pairwise_perm, t = "EMF"),
-    lapply(assess_class_grp, pairwise_perm, t = "FFE"),
-    lapply(assess_class_grp, pairwise_perm, t = "FFE+EMF")
+    lapply(assess_class_grp, pairwise_trt, t = "EMF"),
+    lapply(assess_class_grp, pairwise_trt, t = "FFE"),
+    lapply(assess_class_grp, pairwise_trt, t = "FFE+EMF")
   )
-#+ func_result
-result_tab <-
-  func_apply %>%
+#+ pairwise_trt_result
+pairwise_trt_tab <-
+  pairwise_trt_apply %>%
   bind_rows() %>%
   mutate(
     p_val = `Pr..F.`,
@@ -122,9 +169,41 @@ result_tab <-
   select(-delete,-`Pr..F.`,-Df,-SumOfSqs) %>%
   separate(assess_class_grp, c("assessment", "resistance_class"), sep = "-") %>%
   arrange(assessment, resistance_class, comparison)
-#+ func_table,echo=FALSE
-result_tab %>%
+#+ pairwise_trt_table,echo=FALSE
+pairwise_trt_tab %>%
   kable(format = "pandoc",
         caption = "Pairwise comparisons of terpene composition done by permutation (n=1999); p-values corrected by the Benjamini-Hochberg method.")
-#+ export,echo=FALSE,result=FALSE
-write_csv(result_tab, "pairwise_perm_table.csv")
+#+ export_csv_1,echo=FALSE,result=FALSE
+write_csv(pairwise_trt_tab, "pairwise_trt_table.csv")
+#' 
+#' ## Pairwise induced vs. controls comparisons
+#' The variable `resistance_classes` is used to pass these strings to the function via `lapply()`:
+#+ resistance_classes
+resistance_classes <- c("QDR", "susceptible", "MGR")
+#' 
+#' See output table below.
+#+ pairwise_rust_apply
+pairwise_rust_apply <- 
+  list(
+    lapply(resistance_classes, pairwise_rust, t="EMF"),
+    lapply(resistance_classes, pairwise_rust, t="FFE"),
+    lapply(resistance_classes, pairwise_rust, t="FFE+EMF"),
+    lapply(resistance_classes, pairwise_rust, t="Control")
+  )
+#+ pairwise_rust_result
+pairwise_rust_tab <-
+  pairwise_rust_apply %>%
+  bind_rows() %>%
+  mutate(
+    p_val = `Pr..F.`,
+    p_val_adj = round(p.adjust(p_val, "BH"), 4),
+    sig_05 = case_when(p_val_adj <= 0.05 ~ "*", TRUE ~ "")
+  ) %>%
+  rownames_to_column(var = "delete") %>%
+  select(-delete,-`Pr..F.`,-Df,-SumOfSqs)
+#+ pairwise_rust_table,echo=FALSE
+pairwise_rust_tab %>%
+  kable(format = "pandoc",
+        caption = "Pairwise comparisons of terpene composition done by permutation (n=1999); p-values corrected by the Benjamini-Hochberg method.")
+#+ export_csv_2,echo=FALSE,result=FALSE
+write_csv(pairwise_rust_tab, "pairwise_rust_table.csv")
