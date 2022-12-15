@@ -20,7 +20,7 @@
 #' # Package and library installation
 #' Note that messages and code are often hidden in this notebook for brevity.
 # Package and library installation
-packages_needed <- c("tidyverse", "knitr", "vegan", "colorspace")
+packages_needed <- c("tidyverse", "knitr", "vegan")
 packages_installed <-
   packages_needed %in% rownames(installed.packages())
 #+ packages,message=FALSE
@@ -30,9 +30,6 @@ if (any(!packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
-#+ ggstyle
-# Load ggplot styles and themes from text file
-source("gg_style.txt")
 #'
 #' # Data
 #' See [data_etl.md](https://github.com/bglarkin/wwp_terpenes/blob/main/data_etl.md) for more description of
