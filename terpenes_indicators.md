@@ -15,26 +15,18 @@ Beau Larkin
 - <a href="#results" id="toc-results">Results</a>
   - <a href="#pre-rust-results" id="toc-pre-rust-results">Pre-rust
     results</a>
-    - <a href="#indicators-in-qdr-seedlings"
-      id="toc-indicators-in-qdr-seedlings">Indicators in QDR seedlings</a>
+    - <a href="#plot-of-indicators-and-confidence-intervals"
+      id="toc-plot-of-indicators-and-confidence-intervals">Plot of indicators
+      and confidence intervals</a>
   - <a href="#post-rust-results" id="toc-post-rust-results">Post-rust
     results</a>
     - <a href="#rust-control-seedlings" id="toc-rust-control-seedlings">Rust
       control seedlings</a>
-      - <a href="#indicators-in-susceptible-seedlings"
-        id="toc-indicators-in-susceptible-seedlings">Indicators in susceptible
-        seedlings</a>
-      - <a href="#indicators-in-mgr-seedlings"
-        id="toc-indicators-in-mgr-seedlings">Indicators in MGR seedlings</a>
+    - <a href="#plot-of-indicators-and-confidence-intervals-1"
+      id="toc-plot-of-indicators-and-confidence-intervals-1">Plot of
+      indicators and confidence intervals</a>
     - <a href="#rust-inoculated-seedlings"
       id="toc-rust-inoculated-seedlings">Rust-inoculated seedlings</a>
-      - <a href="#indicators-in-qdr-seedlings-1"
-        id="toc-indicators-in-qdr-seedlings-1">Indicators in QDR seedlings</a>
-      - <a href="#indicators-in-susceptible-seedlings-1"
-        id="toc-indicators-in-susceptible-seedlings-1">Indicators in susceptible
-        seedlings</a>
-      - <a href="#indicators-in-mgr-seedlings-1"
-        id="toc-indicators-in-mgr-seedlings-1">Indicators in MGR seedlings</a>
 
 # Description
 
@@ -51,6 +43,36 @@ al. 2018](https://doi.org/10.1007/978-3-319-71404-2) (page 120):
 > elsewhere) and fidelity (highest when the species is present in all
 > sites of the target group). A high indicator value is obtained by a
 > combination of high specificity and fidelity.
+
+The package [indicspecies](https://doi.org/10.1890/08-1823.1) (De
+Caceres & Legendre 2009) is used to conduct the indicator species
+analysis. Indicspecies identifies species with specificity and fidelity
+to sites (in this case, seedlings) grouped by treatments, and then pools
+groups, looking for indicators of two, then three, or more (if present)
+treatment groups. The groupings can sometimes be difficult to interpret;
+for example, when indicators are found for groupings of control and
+treatment seedlings.
+
+Finally, the function `strassoc()` is used to produce bootstrapped
+confidence intervals on indicator’s strength of association to groups.
+The additional post-hoc test hopefully reduces the need for or concern
+over p-value corrections to `multipatt()`.
+
+Indicator species analysis here is run on subsets of the seedling
+response data:
+
+1.  **Pre-rust inoculation seedlings with resistance classes run
+    independently.** This test looks for constitutive differences among
+    seedlings and early responses to treatment inoculations.
+2.  **Post-rust inoculation seedlings, separated into rust_trt and
+    rust_ctrl groups with resistance classes run independently.** This
+    test looks for constitutive differences among seedlings (rust_ctrl),
+    later responses to treatment inoculations, and induced responses
+    crossed with treatments in rust_inoc.
+3.  **Post rust inoculated seedlings, treatment controls only, with
+    resistance classes run independently.** This test looks for induced
+    differences among resistance classes due only to blister rust
+    inoculation.
 
 # Package and library installation
 
@@ -130,7 +152,6 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
-    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
@@ -141,10 +162,11 @@ Post-rust, assessments and treatments must be considered within each
 resistance class. \## Pre-rust function
 
 ``` r
-indic_pre <- function(rc) {
+indVal_prerust_ci <- data.frame()
+indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
-           assessment == "pre_rust",
+           assessment == a,
            resistance_class == rc) %>%
     select(tree_ID, treatment, assessment, compound, mass) %>%
     pivot_wider(
@@ -159,8 +181,31 @@ indic_pre <- function(rc) {
   indVal <- multipatt(
     X,
     Y$treatment,
-    control = how(nperm = 999)
+    control = how(nperm = p)
   )
+  
+  ind_compounds <- indVal$sign %>% 
+    filter(!is.na(p.value)) %>% 
+    rownames()
+  
+  indVal_boot <- strassoc(X, Y$treatment, func = "IndVal.g", nboot=nb)
+  
+  indVal_prerust_ci <<- 
+  rbind(
+    indVal_prerust_ci,
+  lapply(indVal_boot, function(x) {
+    data.frame(x) %>% 
+      rownames_to_column(var = "compound") %>% 
+      filter(compound %in% ind_compounds) %>% 
+      mutate(resistance_class = rc,
+             assessment = a) %>% 
+      select(resistance_class, assessment, compound, everything())
+    }) %>% 
+    bind_rows(.id = "parameter") %>% 
+    pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+    pivot_wider(names_from = parameter, values_from = value)
+  )
+  
   print(rc)
   summary(indVal, indvalcomp = TRUE)
   
@@ -170,8 +215,8 @@ indic_pre <- function(rc) {
 ## Post-rust function
 
 ``` r
-indic_post <- function(rc, a) {
-  out <- NULL
+indVal_postrust_ci <- data.frame()
+indic_post <- function(rc, a, p=999, nb=999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
            assessment == a,
@@ -191,6 +236,29 @@ indic_post <- function(rc, a) {
     Y$treatment,
     control = how(nperm = 999)
   )
+  
+  ind_compounds <- indVal$sign %>% 
+    filter(!is.na(p.value)) %>% 
+    rownames()
+  
+  indVal_boot <- strassoc(X, Y$treatment, func = "IndVal.g", nboot=nb)
+  
+  indVal_postrust_ci <<- 
+    rbind(
+      indVal_postrust_ci,
+      lapply(indVal_boot, function(x) {
+        data.frame(x) %>% 
+          rownames_to_column(var = "compound") %>% 
+          filter(compound %in% ind_compounds) %>% 
+          mutate(resistance_class = rc,
+                 assessment = a) %>% 
+          select(resistance_class, assessment, compound, everything())
+      }) %>% 
+        bind_rows(.id = "parameter") %>% 
+        pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+        pivot_wider(names_from = parameter, values_from = value)
+    )
+  
   print(paste(a, rc, sep = ", "))
   summary(indVal, indvalcomp = TRUE)
   
@@ -225,7 +293,9 @@ indic_pre("QDR")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-No terpenes identified. \#### Indicators in susceptible seedlings
+No terpenes identified.
+
+#### Indicators in susceptible seedlings
 
 ``` r
 indic_pre("susceptible")
@@ -255,7 +325,8 @@ indic_pre("susceptible")
 
 Abietic acid identified as an indicator in all treatment seedlings, as
 opposed to controls, with decent specificity and very high fidelity.
-\#### Indicators in MGR seedlings
+
+#### Indicators in MGR seedlings
 
 ``` r
 indic_pre("MGR")
@@ -286,13 +357,28 @@ indic_pre("MGR")
 Abietic acid identified as an indicator in all treatment seedlings, as
 opposed to controls, with decent specificity and very high fidelity.
 
+### Plot of indicators and confidence intervals
+
+The plot below shows indicator statistics and confidence intervals on
+single-group comparisons. The statistic shown may not match a
+significant pooled-group statistic if one was found using `multipatt()`.
+Confidence intervals are based on boostrap replication in `strassoc()`
+(n=1000). Confidence intervals which overlap zero mean that the
+statistic is non-significant.
+
+![](terpenes_indicators_files/figure-gfm/indVal_prerust_plot-1.png)<!-- -->
+
 ## Post-rust results
 
 ### Rust control seedlings
 
 Indicator species analyses in rust controls often show terpenes pooled
 in groups that combine control and symbiont treatments, which is
-difficult to interpret. \#### Indicators in QDR seedlings
+difficult to interpret. The first run looked for indicators in single
+treatment groups; with none found, the analysis was restricted to
+indicators in treatments vs. controls.
+
+#### Indicators in QDR seedlings
 
 ``` r
 indic_post("QDR", "rust_ctrl")
@@ -331,6 +417,10 @@ indic_post("QDR", "rust_ctrl")
     ## dehydroabietic 1.0000 0.7978 0.893   0.001 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+No terpenes are indicators for one treatment group. Neoabietic,
+levopiramic, and dehydroabietic are indicators for treatments, as
+opposed to controls.
 
 #### Indicators in susceptible seedlings
 
@@ -372,6 +462,10 @@ indic_post("susceptible", "rust_ctrl")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+No terpenes are indicators for one treatment group. Levopiramic,
+neoabietic, palustric, and dehydroabietic are indicators for treatments,
+as opposed to controls.
+
 #### Indicators in MGR seedlings
 
 ``` r
@@ -387,10 +481,10 @@ indic_post("MGR", "rust_ctrl")
     ##  Significance level (alpha): 0.05
     ## 
     ##  Total number of species: 26
-    ##  Selected number of species: 6 
+    ##  Selected number of species: 7 
     ##  Number of species associated to 1 group: 0 
     ##  Number of species associated to 2 groups: 4 
-    ##  Number of species associated to 3 groups: 2 
+    ##  Number of species associated to 3 groups: 3 
     ## 
     ##  List of species associated to each combination: 
     ## 
@@ -404,12 +498,32 @@ indic_post("MGR", "rust_ctrl")
     ## palustric 0.9671 1.0000 0.983   0.001 ***
     ## abietic   0.9470 0.9000 0.923   0.001 ***
     ## 
-    ##  Group EMF+FFE+FFE+EMF  #sps.  2 
-    ##                  A      B  stat p.value    
-    ## neoabietic  0.9907 0.9667 0.979   0.001 ***
-    ## levopiramic 0.9807 0.9333 0.957   0.001 ***
+    ##  Group EMF+FFE+FFE+EMF  #sps.  3 
+    ##                       A      B  stat p.value    
+    ## neoabietic       0.9907 0.9667 0.979   0.001 ***
+    ## levopiramic      0.9807 0.9333 0.957   0.001 ***
+    ## sandaracopiramic 0.8450 0.8667 0.856   0.047 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+No terpenes are indicators for one treatment group. Levopiramic and
+neoabietic are indicators for treatments, as opposed to controls.
+
+**Constitutive terpenes after rust inoculation segregate along whether
+seedlings were treated with symbionts. There is minimal effect of
+resistance class. Levopiramic, neoabietic, and dehydroabietic, are
+consistent terpenes in this group.**
+
+### Plot of indicators and confidence intervals
+
+The plot below shows indicator statistics and confidence intervals on
+single-group comparisons. The statistic shown may not match a
+significant pooled-group statistic if one was found using `multipatt()`.
+Confidence intervals are based on boostrap replication in `strassoc()`
+(n=1000). Confidence intervals which overlap zero mean that the
+statistic is non-significant.
+
+![](terpenes_indicators_files/figure-gfm/indVal_rustctrl_plot-1.png)<!-- -->
 
 ### Rust-inoculated seedlings
 
@@ -443,6 +557,10 @@ indic_post("QDR", "rust_inoc")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+No terpenes are indicators for one treatment group. Ocimene,
+a_terpineol, and abietic are associated with all treatments, as opposed
+to controls.
+
 #### Indicators in susceptible seedlings
 
 ``` r
@@ -473,6 +591,9 @@ indic_post("susceptible", "rust_inoc")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+No terpenes are indicators for one treatment group. Ocimene, palustric,
+and abietic are associated with all treatments, as opposed to controls.
+
 #### Indicators in MGR seedlings
 
 ``` r
@@ -497,7 +618,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.004 **
+    ## abietic 0.8550 0.8947 0.875    0.01 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -505,6 +626,19 @@ indic_post("MGR", "rust_inoc")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-``` r
-# Consider a way to look at differences based on rust inoculation...in all resistance classes but only control treatments
-```
+No terpenes are indicators for one treatment group. Only ocimene is
+associated with symbiont treatments, as opposed to controls.
+
+**Terpenes in the post-rust, induced seedlings also often segregate
+along symbiont treatments vs. controls. Consistent indicators in this
+group include ocimene and abietic acid.**
+
+\#’ \### Plot of indicators and confidence intervals The plot below
+shows indicator statistics and confidence intervals on single-group
+comparisons. The statistic shown may not match a significant
+pooled-group statistic if one was found using `multipatt()`. Confidence
+intervals are based on boostrap replication in `strassoc()` (n=1000).
+Confidence intervals which overlap zero mean that the statistic is
+non-significant.
+
+![](terpenes_indicators_files/figure-gfm/indVal_rustinoc_plot-1.png)<!-- -->

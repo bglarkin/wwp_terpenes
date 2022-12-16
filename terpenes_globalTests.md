@@ -117,7 +117,6 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
-    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
@@ -224,6 +223,7 @@ terpene_pca <-
       scale_fill_discrete_qualitative(name = "Treatment", palette = "Harmonic") +
       guides(fill = guide_legend(override.aes = list(shape = 21)),
              shape = guide_legend(override.aes = list(fill = "gray50"))) +
+      theme_classic() +
       theme_bgl
     
     plot_compounds <-
@@ -238,6 +238,7 @@ terpene_pca <-
         y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
         title = paste0("Terpenes in ", c, " families")
       ) +
+      theme_classic() +
       theme_bgl
     
     out <- list(permutation_test_result = perm_test)

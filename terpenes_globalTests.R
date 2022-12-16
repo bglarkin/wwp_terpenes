@@ -31,9 +31,6 @@ if (any(!packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
-#+ ggstyle
-# Load ggplot styles and themes from text file
-source("gg_style.txt")
 #'
 #' # Data
 #' See [data_etl.md](https://github.com/bglarkin/wwp_terpenes/blob/main/data_etl.md) for more description of
@@ -145,6 +142,7 @@ terpene_pca <-
       scale_fill_discrete_qualitative(name = "Treatment", palette = "Harmonic") +
       guides(fill = guide_legend(override.aes = list(shape = 21)),
              shape = guide_legend(override.aes = list(fill = "gray50"))) +
+      theme_classic() +
       theme_bgl
     
     plot_compounds <-
@@ -159,6 +157,7 @@ terpene_pca <-
         y = paste0("Component 2, ", labs_pct[2], "% variation explained"),
         title = paste0("Terpenes in ", c, " families")
       ) +
+      theme_classic() +
       theme_bgl
     
     out <- list(permutation_test_result = perm_test)

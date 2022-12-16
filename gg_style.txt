@@ -2,7 +2,6 @@
 # ————————————————————
 
 theme_bgl = 
-  theme_classic() +
   theme(
     text = element_text(
     family = "serif"
