@@ -106,37 +106,50 @@ indic_post <- function(rc, a) {
 #' 
 #' # Results
 #' ## Pre-rust results
-#' ### Indicators in QDR seedlings
+#' #### Indicators in QDR seedlings
 #+ qdr_pre
 indic_pre("QDR")
 #' No terpenes identified. 
+#' #### Indicators in susceptible seedlings
 #+ sus_pre
 indic_pre("susceptible")
 #' Abietic acid identified as an indicator in all treatment seedlings, as opposed to controls, 
 #' with decent specificity and very high fidelity.
+#' #### Indicators in MGR seedlings
 #+ mgr_pre
 indic_pre("MGR")
 #' Abietic acid identified as an indicator in all treatment seedlings, as opposed to controls, 
 #' with decent specificity and very high fidelity.
-
-
-
-
-
-
-
-
+#' 
+#' ## Post-rust results
+#' ### Rust control seedlings
+#' Indicator species analyses in rust controls often show terpenes pooled in groups that combine 
+#' control and symbiont treatments, which is difficult to interpret.
+#' #### Indicators in QDR seedlings
+#+ qdr_post_ctrl
 indic_post("QDR", "rust_ctrl")
+#' 
+#' #### Indicators in susceptible seedlings
+#+ sus_post_ctrl
 indic_post("susceptible", "rust_ctrl")
+#' 
+#' #### Indicators in MGR seedlings
+#+ mgr_post_ctrl
 indic_post("MGR", "rust_ctrl")
-
-
+#' 
+#' ### Rust-inoculated seedlings
+#' #### Indicators in QDR seedlings
+#+ qdr_post_inoc
 indic_post("QDR", "rust_inoc")
+#' 
+#' #### Indicators in susceptible seedlings
+#+ sus_post_inoc
 indic_post("susceptible", "rust_inoc")
+#' 
+#' #### Indicators in MGR seedlings
+#+ mgr_post_inoc
 indic_post("MGR", "rust_inoc")
-
-
-
-
+#' 
+#' 
 
 # Consider a way to look at differences based on rust inoculation...in all resistance classes but only control treatments

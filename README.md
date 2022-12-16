@@ -19,5 +19,10 @@ permuted within experimental greenhouse blocks.
 - Report format: [terpenes_pairwiseTests.md](terpenes_pairwiseTests.md)
 - Raw script: [terpenes_pairwiseTests.R](terpenes_pairwiseTests.R)
 
+## Indicator terpenes 
+
+- Report format: [terpenes_indicators.md](terpenes_indicators.md)
+- Raw script: [terpenes_indicators.R](terpenes_indicators.R)
+
 ## Other files
 - [gg_style.txt](gg_style.txt) contains adjustments to ggplot themes to make figures consistent within this repository.
