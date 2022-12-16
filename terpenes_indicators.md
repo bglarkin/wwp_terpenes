@@ -17,6 +17,24 @@ Beau Larkin
     results</a>
     - <a href="#indicators-in-qdr-seedlings"
       id="toc-indicators-in-qdr-seedlings">Indicators in QDR seedlings</a>
+  - <a href="#post-rust-results" id="toc-post-rust-results">Post-rust
+    results</a>
+    - <a href="#rust-control-seedlings" id="toc-rust-control-seedlings">Rust
+      control seedlings</a>
+      - <a href="#indicators-in-susceptible-seedlings"
+        id="toc-indicators-in-susceptible-seedlings">Indicators in susceptible
+        seedlings</a>
+      - <a href="#indicators-in-mgr-seedlings"
+        id="toc-indicators-in-mgr-seedlings">Indicators in MGR seedlings</a>
+    - <a href="#rust-inoculated-seedlings"
+      id="toc-rust-inoculated-seedlings">Rust-inoculated seedlings</a>
+      - <a href="#indicators-in-qdr-seedlings-1"
+        id="toc-indicators-in-qdr-seedlings-1">Indicators in QDR seedlings</a>
+      - <a href="#indicators-in-susceptible-seedlings-1"
+        id="toc-indicators-in-susceptible-seedlings-1">Indicators in susceptible
+        seedlings</a>
+      - <a href="#indicators-in-mgr-seedlings-1"
+        id="toc-indicators-in-mgr-seedlings-1">Indicators in MGR seedlings</a>
 
 # Description
 
@@ -112,6 +130,7 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
+    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
@@ -182,7 +201,7 @@ indic_post <- function(rc, a) {
 
 ## Pre-rust results
 
-### Indicators in QDR seedlings
+#### Indicators in QDR seedlings
 
 ``` r
 indic_pre("QDR")
@@ -206,7 +225,7 @@ indic_pre("QDR")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-No terpenes identified.
+No terpenes identified. \#### Indicators in susceptible seedlings
 
 ``` r
 indic_pre("susceptible")
@@ -236,6 +255,7 @@ indic_pre("susceptible")
 
 Abietic acid identified as an indicator in all treatment seedlings, as
 opposed to controls, with decent specificity and very high fidelity.
+\#### Indicators in MGR seedlings
 
 ``` r
 indic_pre("MGR")
@@ -258,13 +278,21 @@ indic_pre("MGR")
     ##  List of species associated to each combination: 
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
-    ##              A      B  stat p.value   
-    ## abietic 0.9073 0.9583 0.932   0.002 **
+    ##              A      B  stat p.value    
+    ## abietic 0.9073 0.9583 0.932   0.001 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Abietic acid identified as an indicator in all treatment seedlings, as
 opposed to controls, with decent specificity and very high fidelity.
+
+## Post-rust results
+
+### Rust control seedlings
+
+Indicator species analyses in rust controls often show terpenes pooled
+in groups that combine control and symbiont treatments, which is
+difficult to interpret. \#### Indicators in QDR seedlings
 
 ``` r
 indic_post("QDR", "rust_ctrl")
@@ -304,6 +332,8 @@ indic_post("QDR", "rust_ctrl")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+#### Indicators in susceptible seedlings
+
 ``` r
 indic_post("susceptible", "rust_ctrl")
 ```
@@ -342,6 +372,8 @@ indic_post("susceptible", "rust_ctrl")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+#### Indicators in MGR seedlings
+
 ``` r
 indic_post("MGR", "rust_ctrl")
 ```
@@ -379,6 +411,10 @@ indic_post("MGR", "rust_ctrl")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+### Rust-inoculated seedlings
+
+#### Indicators in QDR seedlings
+
 ``` r
 indic_post("QDR", "rust_inoc")
 ```
@@ -406,6 +442,8 @@ indic_post("QDR", "rust_inoc")
     ## abietic     0.9941 0.8022 0.893   0.001 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#### Indicators in susceptible seedlings
 
 ``` r
 indic_post("susceptible", "rust_inoc")
@@ -435,6 +473,8 @@ indic_post("susceptible", "rust_inoc")
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+#### Indicators in MGR seedlings
+
 ``` r
 indic_post("MGR", "rust_inoc")
 ```
@@ -457,7 +497,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.009 **
+    ## abietic 0.8550 0.8947 0.875   0.004 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
