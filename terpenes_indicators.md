@@ -529,7 +529,7 @@ neoabietic are indicators for treatments, as opposed to controls.
 
 - **Constitutive terpenes after rust inoculation segregate along whether
   seedlings were treated with symbionts. There is minimal effect of
-  resistance class. Levopiramic, neoabietic, and dehydroabietic, are
+  resistance class. Levopiramic, neoabietic, and dehydroabietic are
   consistent terpenes in this group.**
 - **Abietic and palustric acids were associated with EMF (both EMF and
   EMF+FFE treatments) across resistance classes among the rust
