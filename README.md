@@ -23,7 +23,7 @@ permuted within experimental greenhouse blocks.
 - Raw script: [terpenes_pairwiseTests.R](terpenes_pairwiseTests.R)
 
 ## Indicator terpenes 
-An indicator species analysis [Borcard et al. 2018](https://doi.org/10.1007/978-3-319-71404-2) is conducted 
+An indicator species analysis ([Borcard et al. 2018](https://doi.org/10.1007/978-3-319-71404-2)) is conducted 
 to identify which terpene compounds associate strongly with particular assessments, 
 resistance classes, or treatments. A post-hoc bootstrap test is conducted to produce visualizations and 
 corroborate the indicator species analysis.
