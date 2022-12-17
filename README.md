@@ -3,10 +3,12 @@ Analysis of western white pine (*Pinus monitcola*) terpenes in response to blist
 
 ## Source data
 The [Database]() directory contains raw csv files which are extracted, transformed, and loaded by [data_etl.md](data_etl.R). The ETL script is called separately in each analysis script for brevity.
+
 - Raw script: [data_etl.R](data_etl.md)
 
 ## Global ordination and permutation tests
 Ordinations of class centroids for each resistance class of seedlings. Locations based on all terpene compounds. Permutation tests conducted with `adonis2()` and 1999 permutations. 
+
 - Report format: [terpenes_globalTests.md](terpenes_globalTests.md)
 - Raw script: [terpenes_globalTests.R](terpenes_globalTests.R)
 
@@ -16,10 +18,15 @@ within resistance classes and assessments, and between symbiont controls and tre
 permuted within experimental greenhouse blocks.
 2. Permutations tests as in #1, but between induced and control seedlings after the rust inoculation step
 (**rust_inoc** vs. **rust_ctrl**)
+
 - Report format: [terpenes_pairwiseTests.md](terpenes_pairwiseTests.md)
 - Raw script: [terpenes_pairwiseTests.R](terpenes_pairwiseTests.R)
 
 ## Indicator terpenes 
+An indicator species analysis [Borcard et al. 2018](https://doi.org/10.1007/978-3-319-71404-2) is conducted 
+to identify which terpene compounds associate strongly with particular assessments, 
+resistance classes, or treatments. A post-hoc bootstrap test is conducted to produce visualizations and 
+corroborate the indicator species analysis.
 
 - Report format: [terpenes_indicators.md](terpenes_indicators.md)
 - Raw script: [terpenes_indicators.R](terpenes_indicators.R)

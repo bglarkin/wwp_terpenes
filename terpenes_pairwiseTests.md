@@ -1,7 +1,8 @@
 Pairwise tests of terpene composition
 ================
 Beau Larkin
-2022-12-09
+
+Last updated: 16 December, 2022
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -43,7 +44,7 @@ brevity.
 
 ``` r
 # Package and library installation
-packages_needed <- c("tidyverse", "knitr", "vegan", "colorspace")
+packages_needed <- c("tidyverse", "knitr", "vegan")
 packages_installed <-
   packages_needed %in% rownames(installed.packages())
 ```
@@ -57,11 +58,6 @@ if (any(!packages_installed))
 for (i in 1:length(packages_needed)) {
   library(packages_needed[i], character.only = T)
 }
-```
-
-``` r
-# Load ggplot styles and themes from text file
-source("gg_style.txt")
 ```
 
 # Data
@@ -119,6 +115,7 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
+    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 

@@ -1,7 +1,7 @@
 #' ---
 #' title: "Pairwise tests of terpene composition"
-#' author: "Beau Larkin"
-#' date: "2022-12-09"
+#' author: "Beau Larkin\n"
+#' date: "Last updated: `r format(Sys.time(), '%d %B, %Y')`"
 #' output:
 #'   github_document:
 #'     toc: true
