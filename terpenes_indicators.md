@@ -165,7 +165,7 @@ sapply(data, function(x)
 # Functions
 
 Two wrapper functions are used to produce summaries of the function
-`multipatt()`. Two functions are needed because with the pre-rust
+`multipatt()` and `strassoc()`. Two functions are needed because with the pre-rust
 assessment, only treatments are considered within each resistance class.
 Post-rust, assessments and treatments must be considered within each
 resistance class.
