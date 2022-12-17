@@ -172,7 +172,7 @@ pairwise_trt <- function(c, t, p = 1999) {
 
 ## Pairwise comparisons: induced vs. control in resistance classes and treatments
 
-This functions provides group comparisons between induced and control
+This function provides group comparisons between induced and control
 seedlings (**rust_inoc** vs. **rust_ctrl**) for each pairwise comparison
 among resistance classes and treatments. A permutation test is used for
 each comparison, and no strata are used due to the incomplete design.
