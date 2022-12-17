@@ -241,7 +241,7 @@ indic_post("MGR", "rust_ctrl")
 #' 
 #' #### Summary
 #' - **Constitutive terpenes after rust inoculation segregate along whether seedlings were treated with symbionts. There is minimal effect
-#' of resistance class. Levopiramic, neoabietic, and dehydroabietic, are consistent terpenes in this group.**
+#' of resistance class. Levopiramic, neoabietic, and dehydroabietic are consistent terpenes in this group.**
 #' - **Abietic and palustric acids were associated with EMF (both EMF and EMF+FFE treatments) across resistance classes
 #' among the rust controls.**
 #' 
