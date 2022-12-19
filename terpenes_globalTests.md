@@ -2,7 +2,7 @@ Global tests of terpene composition
 ================
 Beau Larkin
 
-Last updated: 16 December, 2022
+Last updated: 19 December, 2022
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -113,7 +113,6 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
-    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
@@ -227,9 +226,7 @@ terpene_pca <-
       ggplot(terp_centers, aes(x = PC1, y = PC2)) +
       geom_vline(xintercept = 0, linetype = "dotted") +
       geom_hline(yintercept = 0, linetype = "dotted") +
-      geom_label(aes(label = compound),
-                 family = "serif",
-                 size = 8 * 0.36) +
+      geom_label(aes(label = compound), size = 8 * 0.36) +
       labs(
         x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
         y = paste0("Component 2, ", labs_pct[2], "% variation explained"),

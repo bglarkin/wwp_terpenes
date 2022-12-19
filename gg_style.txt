@@ -4,14 +4,14 @@
 theme_bgl = 
   theme(
     text = element_text(
-    family = "serif"
+    family = "sans"
     ),
     axis.title = element_text(
       size = 12
     ),
     axis.text.x = element_text(
       size = 9,
-      family = "serif",
+      family = "sans",
       margin = unit(c(
         t = 2,
         r = 0,
@@ -21,7 +21,7 @@ theme_bgl =
     ),
     axis.text.y = element_text(
       size = 9,
-      family = "serif",
+      family = "sans",
       margin = unit(c(
         t = 0,
         r = 2,
@@ -32,26 +32,26 @@ theme_bgl =
     axis.ticks.length = unit(-2, "mm"),
     strip.text = element_text(
       size = 12,
-      family = "serif",
+      family = "sans",
       face = 2
     ),
     plot.caption = element_text(
       size = 8,
-      family = "serif"
+      family = "sans"
     ),
     plot.title = element_text(
       size = 14,
-      family = "serif",
+      family = "sans",
       face = 2
     ),
     legend.text = element_text(
       size = 10,
-      family = "serif",
+      family = "sans",
       face = 1
     ),
     legend.title = element_text(
       size = 10,
-      family = "serif",
+      family = "sans",
       face = 1
     ),
     legend.position = "right",

@@ -149,9 +149,7 @@ terpene_pca <-
       ggplot(terp_centers, aes(x = PC1, y = PC2)) +
       geom_vline(xintercept = 0, linetype = "dotted") +
       geom_hline(yintercept = 0, linetype = "dotted") +
-      geom_label(aes(label = compound),
-                 family = "serif",
-                 size = 8 * 0.36) +
+      geom_label(aes(label = compound), size = 8 * 0.36) +
       labs(
         x = paste0("Component 1, ", labs_pct[1], "% variation explained"),
         y = paste0("Component 2, ", labs_pct[2], "% variation explained"),

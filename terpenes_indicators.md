@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 16 December, 2022
+Last updated: 19 December, 2022
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -160,15 +160,14 @@ sapply(data, function(x)
     ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
     ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
     ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
-    ## # ℹ Use `colnames()` to see all variable names
 
 # Functions
 
-Two wrapper functions are used to produce summaries of the function
-`multipatt()` and `strassoc()`. Two functions are needed because with the pre-rust
-assessment, only treatments are considered within each resistance class.
-Post-rust, assessments and treatments must be considered within each
-resistance class.
+Two wrapper functions are used to produce summaries of the functions
+`multipatt()` and `strassoc()`. Two functions are needed because with
+the pre-rust assessment, only treatments are considered within each
+resistance class. Post-rust, assessments and treatments must be
+considered within each resistance class.
 
 ## Pre-rust function
 
@@ -518,7 +517,7 @@ indic_post("MGR", "rust_ctrl")
     ##                       A      B  stat p.value    
     ## neoabietic       0.9907 0.9667 0.979   0.001 ***
     ## levopiramic      0.9807 0.9333 0.957   0.001 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856   0.047 *  
+    ## sandaracopiramic 0.8450 0.8667 0.856   0.042 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -640,7 +639,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875    0.01 **
+    ## abietic 0.8550 0.8947 0.875   0.003 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
