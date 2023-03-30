@@ -91,9 +91,9 @@ pairwise_trt <- function(c, t, p = 1999) {
 #' ## Pairwise comparisons: induced vs. control in resistance classes and treatments
 #' This function provides group comparisons between induced and control 
 #' seedlings (**rust_inoc** vs. **rust_ctrl**) for each pairwise comparison among resistance classes
-#' and treatments. A permutation test
-#' is used for each comparison, and no strata are used due to the incomplete design. P-values
-#' are corrected due to the number of comparisons being made.
+#' and treatments. A permutation test is used for each comparison, and blocks are used as strata.
+#' The distribution of blocks among assessments may create an incomplete design in this case. 
+#' P-values are corrected due to the number of comparisons being made.
 #'
 #' ### Terms
 #' - permutations = 1999
@@ -106,15 +106,15 @@ pairwise_rust <- function(rc, t, p=1999) {
            assessment != "pre_rust",
            resistance_class == rc,
            treatment == t) %>%
-    select(tree_ID, treatment, assessment, compound, mass) %>%
+    select(tree_ID, treatment, assessment, block, compound, mass) %>%
     pivot_wider(
       names_from = compound,
       values_from = mass,
       values_fill = 0
     )
-  X <- data.frame(df %>% select(-treatment,-assessment),
+  X <- data.frame(df %>% select(-treatment,-assessment,-block),
                   row.names = 1)
-  Y <- data.frame(df %>% select(tree_ID, treatment, assessment),
+  Y <- data.frame(df %>% select(tree_ID, treatment, assessment, block),
                   row.names = 1)
   set.seed(146)
   result <-
@@ -126,7 +126,8 @@ pairwise_rust <- function(rc, t, p=1999) {
         scale(X) ~ assessment,
         data = Y,
         permutations = p,
-        method = "euclidean"
+        method = "euclidean",
+        strata = Y$block
       )
     )[1,]
   out <- rbind(out, result)
