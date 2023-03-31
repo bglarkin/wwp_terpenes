@@ -15,7 +15,10 @@
 #' Permutation tests are used to test multivariate differences in terpene composition
 #' among control, treatment, and assessment groups. One test is done for each resistance class.
 #' Then, a global test is done using all terpenes and testing resistance classes, treatments,
-#' and assessments in a three-way anova by permutation.
+#' and assessments. For this test, the assessment variable is split into rust_trt and collection
+#' to separate the effects of these components. 
+#' 
+#' Greenhouse block is included in all tests. 
 #'
 #' # Package and library installation
 #' Note that messages and code are often hidden in this notebook for brevity.
@@ -184,31 +187,53 @@ terpene_pca("susceptible")
 terpene_pca("MGR")
 #'
 #' ## Global test
+#' 
+#' - Split assessment into rust_trt and collection
+#' - Include block
+#' 
 #+ global_data
 g_df <- data$terpene %>%
   filter(mass_type == "dw") %>%
-  mutate(tree_key = paste(tree_ID, year, sep = "-")) %>%
+  mutate(tree_key = paste(tree_ID, year, sep = "-"),
+         rust_trt = case_when(
+           assessment == "rust_inoc" ~ "rust", TRUE ~ "no_rust"),
+         collection = case_when(
+           assessment == "pre_rust" ~ "C1", TRUE ~ "C2")) %>%
   select(tree_key,
+         block,
          resistance_class,
          treatment,
-         assessment,
+         rust_trt,
+         collection,
          compound,
          mass) %>%
   pivot_wider(names_from = compound,
               values_from = mass,
               values_fill = 0)
 g_X <-
-  data.frame(g_df %>% select(-resistance_class, -treatment, -assessment),
+  data.frame(g_df %>% select(-(block:collection)),
              row.names = 1)
 g_Y <-
-  data.frame(g_df %>% select(resistance_class, treatment, assessment))
+  data.frame(g_df %>% select(block:collection))
 #+ global_perm
 set.seed(123)
-print(
+gp <- 
   adonis2(
-    scale(g_X) ~ resistance_class * assessment * treatment,
+    scale(g_X) ~ resistance_class * treatment * rust_trt * collection,
     data = g_Y,
     permutations = 1999,
-    method = "euclidean"
+    method = "euclidean",
+    strata = g_Y$block
   )
+#+ adjusted_p_values
+padj_BH <- data.frame(
+  p.val = gp$`Pr(>F)`,
+  p.adj = p.adjust(gp$`Pr(>F)`, method = "BH") %>% round(., 4)
 )
+#+ print_results
+print(list(
+  model = gp, 
+  p_values_adjusted = padj_BH)
+  )
+
+

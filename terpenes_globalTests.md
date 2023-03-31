@@ -2,7 +2,7 @@ Global tests of terpene composition
 ================
 Beau Larkin
 
-Last updated: 19 December, 2022
+Last updated: 31 March, 2023
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -31,8 +31,11 @@ Last updated: 19 December, 2022
 Permutation tests are used to test multivariate differences in terpene
 composition among control, treatment, and assessment groups. One test is
 done for each resistance class. Then, a global test is done using all
-terpenes and testing resistance classes, treatments, and assessments in
-a three-way anova by permutation.
+terpenes and testing resistance classes, treatments, and assessments.
+For this test, the assessment variable is split into rust_trt and
+collection to separate the effects of these components.
+
+Greenhouse block is included in all tests.
 
 # Package and library installation
 
@@ -260,6 +263,9 @@ test.
     ## Resistance type QDR selected.
     ## ---------------------------------------------------------------------
 
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
+
 ![](terpenes_globalTests_files/figure-gfm/qdr_test-1.png)<!-- -->![](terpenes_globalTests_files/figure-gfm/qdr_test-2.png)<!-- -->
 
     ## $permutation_test_result
@@ -328,53 +334,98 @@ test.
 
 ## Global test
 
+- Split assessment into rust_trt and collection
+- Include block
+
 ``` r
 g_df <- data$terpene %>%
   filter(mass_type == "dw") %>%
-  mutate(tree_key = paste(tree_ID, year, sep = "-")) %>%
+  mutate(tree_key = paste(tree_ID, year, sep = "-"),
+         rust_trt = case_when(
+           assessment == "rust_inoc" ~ "rust", TRUE ~ "no_rust"),
+         collection = case_when(
+           assessment == "pre_rust" ~ "C1", TRUE ~ "C2")) %>%
   select(tree_key,
+         block,
          resistance_class,
          treatment,
-         assessment,
+         rust_trt,
+         collection,
          compound,
          mass) %>%
   pivot_wider(names_from = compound,
               values_from = mass,
               values_fill = 0)
 g_X <-
-  data.frame(g_df %>% select(-resistance_class, -treatment, -assessment),
+  data.frame(g_df %>% select(-(block:collection)),
              row.names = 1)
 g_Y <-
-  data.frame(g_df %>% select(resistance_class, treatment, assessment))
+  data.frame(g_df %>% select(block:collection))
 ```
 
 ``` r
 set.seed(123)
-print(
+gp <- 
   adonis2(
-    scale(g_X) ~ resistance_class * assessment * treatment,
+    scale(g_X) ~ resistance_class * treatment * rust_trt * collection,
     data = g_Y,
     permutations = 1999,
-    method = "euclidean"
+    method = "euclidean",
+    strata = g_Y$block
   )
+```
+
+``` r
+padj_BH <- data.frame(
+  p.val = gp$`Pr(>F)`,
+  p.adj = p.adjust(gp$`Pr(>F)`, method = "BH") %>% round(., 4)
 )
 ```
 
+``` r
+print(list(
+  model = gp, 
+  p_values_adjusted = padj_BH)
+  )
+```
+
+    ## $model
     ## Permutation test for adonis under reduced model
     ## Terms added sequentially (first to last)
+    ## Blocks:  strata 
     ## Permutation: free
     ## Number of permutations: 1999
     ## 
-    ## adonis2(formula = scale(g_X) ~ resistance_class * assessment * treatment, data = g_Y, permutations = 1999, method = "euclidean")
+    ## adonis2(formula = scale(g_X) ~ resistance_class * treatment * rust_trt * collection, data = g_Y, permutations = 1999, method = "euclidean", strata = g_Y$block)
     ##                                        Df SumOfSqs      R2        F Pr(>F)    
     ## resistance_class                        2    964.7 0.04969  26.2398 0.0005 ***
-    ## assessment                              2   3761.7 0.19377 102.3180 0.0005 ***
-    ## treatment                               3    692.8 0.03569  12.5623 0.0005 ***
-    ## resistance_class:assessment             4    204.8 0.01055   2.7851 0.0005 ***
-    ## resistance_class:treatment              6    176.9 0.00911   1.6036 0.0065 ** 
-    ## assessment:treatment                    6    839.5 0.04324   7.6111 0.0005 ***
-    ## resistance_class:assessment:treatment  12    199.2 0.01026   0.9033 0.7555    
+    ## treatment                               3    678.9 0.03497  12.3111 0.0005 ***
+    ## rust_trt                                1    712.3 0.03669  38.7495 0.0005 ***
+    ## collection                              1   3063.2 0.15779 166.6403 0.0005 ***
+    ## resistance_class:treatment              6    180.1 0.00928   1.6332 0.0025 ** 
+    ## resistance_class:rust_trt               2     66.9 0.00345   1.8208 0.0210 *  
+    ## treatment:rust_trt                      3    338.0 0.01741   6.1298 0.0005 ***
+    ## resistance_class:collection             2    134.7 0.00694   3.6627 0.0005 ***
+    ## treatment:collection                    3    501.3 0.02583   9.0911 0.0005 ***
+    ## resistance_class:treatment:rust_trt     6     83.4 0.00429   0.7559 0.9055    
+    ## resistance_class:treatment:collection   6    115.9 0.00597   1.0506 0.3550    
     ## Residual                              684  12573.5 0.64768                    
     ## Total                                 719  19413.0 1.00000                    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## $p_values_adjusted
+    ##     p.val  p.adj
+    ## 1  0.0005 0.0008
+    ## 2  0.0005 0.0008
+    ## 3  0.0005 0.0008
+    ## 4  0.0005 0.0008
+    ## 5  0.0025 0.0034
+    ## 6  0.0210 0.0257
+    ## 7  0.0005 0.0008
+    ## 8  0.0005 0.0008
+    ## 9  0.0005 0.0008
+    ## 10 0.9055 0.9055
+    ## 11 0.3550 0.3905
+    ## 12     NA     NA
+    ## 13     NA     NA
