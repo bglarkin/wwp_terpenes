@@ -27,7 +27,7 @@
 #' seedlings. 
 #' 
 #' Finally, the function `strassoc()` is used to produce bootstrapped confidence intervals on indicators' strength of 
-#' association to groups. The additional post-hoc test hopefully reduces the need for or concern over p-value corrections to 
+#' association to groups. The additional post-hoc test reduces the need for or concern over p-value corrections to 
 #' `multipatt()`. The bootstrapped statistics and confidence intervals also allow the production of figures using
 #' `ggplot()` for easy interpretation. 
 #' 
