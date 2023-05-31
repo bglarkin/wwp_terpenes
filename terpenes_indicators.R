@@ -44,7 +44,7 @@
 #' # Package and library installation
 #' Note that messages and code are often hidden in this notebook for brevity.
 # Package and library installation
-packages_needed <- c("tidyverse", "knitr", "indicspecies")
+packages_needed <- c("tidyverse", "knitr", "indicspecies", "colorspace")
 packages_installed <-
   packages_needed %in% rownames(installed.packages())
 #+ packages,message=FALSE
@@ -113,6 +113,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
     }) %>% 
     bind_rows(.id = "parameter") %>% 
     pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+    mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
     pivot_wider(names_from = parameter, values_from = value)
   )
   
@@ -124,6 +125,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
 #' ## Post-rust function
 #+ post_rust_function
 indVal_postrust_ci <- data.frame()
+indVal_pvals <- data.frame()
 indic_post <- function(rc, a, p=999, nb=999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
@@ -164,8 +166,24 @@ indic_post <- function(rc, a, p=999, nb=999) {
       }) %>% 
         bind_rows(.id = "parameter") %>% 
         pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+        mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
         pivot_wider(names_from = parameter, values_from = value)
     )
+  
+  indVal_pvals <<-
+    rbind(indVal_pvals, 
+          indVal$sign %>% 
+            rownames_to_column(var = "compound") %>% 
+            mutate(resistance_class = rc,
+                   assessment = a,
+                   p_val = case_match(p.value, NA ~ 1, .default = p.value),
+                   corr_p_val = p.adjust(p_val, method = "BH")) %>% 
+            filter(compound %in% ind_compounds, p.value <= 0.05) %>% 
+            pivot_longer(cols = 2:5, names_to = "treatment", values_to = "present") %>% 
+            filter(present == 1, corr_p_val <= 0.05) %>% 
+            mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
+            select(-index, -present)
+          )
   
   print(paste(a, rc, sep = ", "))
   summary(indVal, indvalcomp = TRUE)
@@ -317,3 +335,39 @@ ggplot(aes(x = treatment, y = stat, color = color0)) +
   theme_bw() +
   theme_bgl +
   theme(legend.position = "none")
+
+
+
+#' New figure, work in progress
+
+
+
+terpene_heatmap_data <- 
+  data$terpene %>%
+  filter(mass_type == "dw", assessment != "pre_rust") %>%
+  mutate(
+    treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
+  group_by(treatment, assessment, resistance_class, class, compound) %>% 
+  summarize(mass = log1p(median(mass)), .groups = "drop") %>%
+  left_join(
+    indVal_pvals %>%
+      mutate(sig = 0.5),
+    by = join_by(treatment, assessment, resistance_class, compound)
+    ) %>% 
+  mutate(
+    assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class)
+  )
+
+terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
+
+ggplot(aes(x = treatment, y = compound)) +
+  facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
+  geom_tile(aes(fill = mass)) +
+  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
+  scale_fill_continuous_sequential(palette = "Grays") +
+  scale_linewidth(range = c(0.5, 0.5)) +
+  labs(x = "", y = "") +
+  guides(linewidth = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
