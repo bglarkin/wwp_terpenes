@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 31 May, 2023
+Last updated: 01 June, 2023
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -514,10 +514,10 @@ indic_post("MGR", "rust_ctrl")
     ##  Significance level (alpha): 0.05
     ## 
     ##  Total number of species: 26
-    ##  Selected number of species: 6 
+    ##  Selected number of species: 7 
     ##  Number of species associated to 1 group: 0 
     ##  Number of species associated to 2 groups: 4 
-    ##  Number of species associated to 3 groups: 2 
+    ##  Number of species associated to 3 groups: 3 
     ## 
     ##  List of species associated to each combination: 
     ## 
@@ -531,10 +531,11 @@ indic_post("MGR", "rust_ctrl")
     ## palustric 0.9671 1.0000 0.983   0.001 ***
     ## abietic   0.9470 0.9000 0.923   0.001 ***
     ## 
-    ##  Group EMF+FFE+FFE+EMF  #sps.  2 
-    ##                  A      B  stat p.value    
-    ## neoabietic  0.9907 0.9667 0.979   0.001 ***
-    ## levopiramic 0.9807 0.9333 0.957   0.001 ***
+    ##  Group EMF+FFE+FFE+EMF  #sps.  3 
+    ##                       A      B  stat p.value    
+    ## neoabietic       0.9907 0.9667 0.979   0.001 ***
+    ## levopiramic      0.9807 0.9333 0.957   0.001 ***
+    ## sandaracopiramic 0.8450 0.8667 0.856   0.042 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -656,7 +657,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.004 **
+    ## abietic 0.8550 0.8947 0.875    0.01 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -703,7 +704,7 @@ terpene_heatmap_data <-
   mutate(
     treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
   group_by(treatment, assessment, resistance_class, class, compound) %>% 
-  summarize(mass = log1p(median(mass)), .groups = "drop") %>%
+  summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
   left_join(
     indVal_pvals %>%
       mutate(sig = 0.5),
@@ -711,9 +712,33 @@ terpene_heatmap_data <-
     ) %>% 
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
-    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class)
-  )
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
+    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    compound = factor(compound)
+  ) %>% 
+  group_by(class) %>%
+  mutate(mass_scl = mass/max(mass)) %>%
+  ungroup() %>%
+  glimpse()
+```
 
+    ## Rows: 624
+    ## Columns: 12
+    ## $ treatment        <ord> Control, Control, Control, Control, Control, Control,…
+    ## $ assessment       <chr> "NoRust", "NoRust", "NoRust", "NoRust", "NoRust", "No…
+    ## $ resistance_class <chr> "MGR", "MGR", "MGR", "MGR", "MGR", "MGR", "MGR", "MGR…
+    ## $ class            <chr> "Diterpene", "Diterpene", "Diterpene", "Diterpene", "…
+    ## $ compound         <fct> abietic, dehydroabietic, levopiramic, neoabietic, pal…
+    ## $ mass             <dbl> 0.05395689, 1.05793785, 0.13634210, 0.01165839, 0.144…
+    ## $ stat             <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.9042544, NA…
+    ## $ p.value          <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.001, NA, NA…
+    ## $ p_val            <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.001, NA, NA…
+    ## $ corr_p_val       <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.004333333, …
+    ## $ sig              <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, NA, NA, …
+    ## $ mass_scl         <dbl> 0.019153968, 0.375553665, 0.048399607, 0.004138571, 0…
+
+``` r
 terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
 ```
 
@@ -731,16 +756,49 @@ terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sor
     ## [67] 0.008666667 0.026000000 0.026000000 0.026000000
 
 ``` r
-ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
+y_breaks <- levels(terpene_heatmap_data$compound)
+y_labels_pre <- levels(terpene_heatmap_data$compound)
+y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <- 
+  c(expression(paste(alpha, "-humulene")),
+    expression(paste(alpha, "-pinene")),
+    expression(paste(alpha, "-terpineol")),
+    expression(paste(beta, "-caryophyllene")),
+    expression(paste(beta, "-phelandrene")),
+    expression(paste(beta, "-pinene")),
+    expression(paste("bornyl acetate")),
+    expression(paste(delta, "-cadinene")),
+    expression(paste("geranyl acetate")),
+    expression(paste("germacrene-D")),
+    expression(paste("germacrene-D-4-ol")),
+    expression(paste(delta, "-3-carene")),
+    expression(paste(gamma, "-terpinene"))
+  )
+y_labels <- parse(text = y_labels_pre)
+
+terpene_heatmap <- 
+  ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
-  geom_tile(aes(fill = mass)) +
+  geom_tile(aes(fill = mass_scl)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_continuous_sequential(palette = "Grays") +
-  scale_linewidth(range = c(0.5, 0.5)) +
+  scale_fill_continuous_sequential(name = "Terpene\nmass\n(scaled)\n", palette = "Grays") +
+  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
   guides(linewidth = "none") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        panel.grid = element_blank())
+
+terpene_heatmap
 ```
 
 ![](terpenes_indicators_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
+ggsave(filename = "terpene_heatmap.pdf",
+       plot = terpene_heatmap,
+       device = "pdf",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 8,
+       height = 8)
+```
