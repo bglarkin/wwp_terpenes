@@ -62,8 +62,7 @@ for (i in 1:length(packages_needed)) {
 #+ data_source,message=FALSE,results=FALSE
 source("data_etl.R")
 #+ data_headers
-sapply(data, function(x)
-  head(x, 2))
+sapply(data, function(x) head(x, 2))
 #' 
 #' # Functions
 #' Two wrapper functions are used to produce summaries of the functions `multipatt()` and `strassoc()`. Two functions
@@ -335,13 +334,37 @@ ggplot(aes(x = treatment, y = stat, color = color0)) +
   theme_bw() +
   theme_bgl +
   theme(legend.position = "none")
-
-
-
-#' New figure, work in progress
-
-
-
+#' 
+#' ### Heatmap of all terpenes and indicators
+#' The following figure shows variation in terpene masses across treatments, resistance classes, 
+#' and post-rust assessments. To create the heatmap, terpene masses for technical replicates were 
+#' averaged within each combination of experimental factors. Then, these averages were log-transformed
+#' to spread the distributions and improve the visual interpretation of the color gradient. Terpene 
+#' masses vary among terpene classes, making low or high molecular weight classes squash to one side 
+#' of the color gradient and making differences between cells hard to see. To take advantage of a full
+#' color gradient for each terpene class, Log-transformed
+#' averages were then scaled within each terpene class by dividing each value by the maximum in that class. 
+#' This results in values ranging from 0-1 in each terpene class, displaying the full color gradient 
+#' and improving visual interpretation. 
+#' 
+#' Boxes around cells in the heatmap outline indicate that the terpene is a significant indicator 
+#' for that combination of experimental factors at p<0.05. Indicator statistics were determined using `multipatt()` from
+#' package [indicspecies](http://sites.google.com/site/miqueldecaceres/) (De Caceres & Legendre 2009) 
+#' with 1000 permutations. P values were corrected for multiple comparisons.
+#' Significance was visually corroborated using `strassoc()`, also from 
+#' package indicspecies, where 95% confidence intervals around the indicator statistic 
+#' were computed with 1000 bootstrap samples. Significance is
+#' inferred when the 95% confidence intervals do not include zero.
+#' 
+#' Note: the indicator statistic returned by `multipatt()` is based on grouping treatment classes. It 
+#' does not equal the indicator statistic returned by `strassoc()`. Either could be used here. Generally,
+#' the statistic returned by `multipatt()` is more robust due to the availability of treatment groupings,
+#' but the confidence intervals produced by `strassoc()` aren't limited by the lack of p value correction
+#' and produce a better visual display of differences among treatments. 
+#' 
+#' **Data wrangling for heatmap**
+#' Data wrangling is shown here because much of the source data is modified to produce the figure. 
+#+ indVal_heatmap_data
 terpene_heatmap_data <- 
   data$terpene %>%
   filter(mass_type == "dw", assessment != "pre_rust") %>%
@@ -349,13 +372,15 @@ terpene_heatmap_data <-
     treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
   group_by(treatment, assessment, resistance_class, class, compound) %>% 
   summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
+  # Terpene masses are averaged and log-transformed in cells to improve visual interpretation.
   left_join(
     indVal_pvals %>%
       mutate(sig = 0.5),
+    # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
     by = join_by(treatment, assessment, resistance_class, compound)
     ) %>% 
   mutate(
-    assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
+    assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
@@ -363,11 +388,10 @@ terpene_heatmap_data <-
   ) %>% 
   group_by(class) %>%
   mutate(mass_scl = mass/max(mass)) %>%
-  ungroup() %>%
-  glimpse()
-
-terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
-
+  # Raw terpene masses vary among terpene classes, making differences between cells hard to see. 
+  # Log-transformed averages are scaled within each terpene class to improve visual representation.
+  ungroup()
+#+ indVal_heatmap_labels,echo=FALSE
 y_breaks <- levels(terpene_heatmap_data$compound)
 y_labels_pre <- levels(terpene_heatmap_data$compound)
 y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <- 
@@ -386,26 +410,31 @@ y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <-
     expression(paste(gamma, "-terpinene"))
   )
 y_labels <- parse(text = y_labels_pre)
-
+#+ indVal_heatmap_script,echo=FALSE
 terpene_heatmap <- 
   ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
   geom_tile(aes(fill = mass_scl)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_continuous_sequential(name = "Terpene\nmass\n(scaled)\n", palette = "Grays") +
-  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_fill_gradient(low = "white", high = "gray15") +
+  scale_linewidth(range = c(0.8, 0.8)) +
   scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
   guides(linewidth = "none") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
         panel.grid = element_blank())
-
+#+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(9,10)
 terpene_heatmap
-
+#+ indVal_heatmap_plot_pub,echo=FALSE
 ggsave(filename = "terpene_heatmap.pdf",
        plot = terpene_heatmap,
        device = "pdf",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
        width = 8,
        height = 8)
+#' 
+#' # References
+#+ citations
+print(citation("indicspecies"), bibtex = FALSE)
+print(citation("tidyverse"), bibtex = FALSE)

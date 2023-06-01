@@ -33,6 +33,9 @@ Last updated: 01 June, 2023
     - <a href="#plot-of-indicators-and-confidence-intervals-2"
       id="toc-plot-of-indicators-and-confidence-intervals-2">Plot of
       indicators and confidence intervals</a>
+    - <a href="#heatmap-of-all-terpenes-and-indicators"
+      id="toc-heatmap-of-all-terpenes-and-indicators">Heatmap of all terpenes
+      and indicators</a>
 
 # Description
 
@@ -657,7 +660,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875    0.01 **
+    ## abietic 0.8550 0.8947 0.875   0.008 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -695,7 +698,43 @@ the plot.
 
 ![](terpenes_indicators_files/figure-gfm/indVal_rustinoc_plot-1.png)<!-- -->
 
-New figure, work in progress
+### Heatmap of all terpenes and indicators
+
+The following figure shows variation in terpene masses across
+treatments, resistance classes, and post-rust assessments. To create the
+heatmap, terpene masses for technical replicates were averaged within
+each combination of experimental factors. Then, these averages were
+log-transformed to spread the distributions and improve the visual
+interpretation of the color gradient. Terpene masses vary among terpene
+classes, making low or high molecular weight classes squash to one side
+of the color gradient and making differences between cells hard to see.
+To take advantage of a full color gradient for each terpene class,
+Log-transformed averages were then scaled within each terpene class by
+dividing each value by the maximum in that class. This results in values
+ranging from 0-1 in each terpene class, displaying the full color
+gradient and improving visual interpretation.
+
+Boxes around cells in the heatmap outline indicate that the terpene is a
+significant indicator for that combination of experimental factors at
+p\<0.05. Indicator statistics were determined using `multipatt()` from
+package [indicspecies](http://sites.google.com/site/miqueldecaceres/)
+(De Caceres & Legendre 2009) with 1000 permutations. P values were
+corrected for multiple comparisons. Significance was visually
+corroborated using `strassoc()`, also from package indicspecies, where
+95% confidence intervals around the indicator statistic were computed
+with 1000 bootstrap samples. Significance is inferred when the 95%
+confidence intervals do not include zero.
+
+Note: the indicator statistic returned by `multipatt()` is based on
+grouping treatment classes. It does not equal the indicator statistic
+returned by `strassoc()`. Either could be used here. Generally, the
+statistic returned by `multipatt()` is more robust due to the
+availability of treatment groupings, but the confidence intervals
+produced by `strassoc()` aren’t limited by the lack of p value
+correction and produce a better visual display of differences among
+treatments.
+
+**Data wrangling for heatmap**
 
 ``` r
 terpene_heatmap_data <- 
@@ -705,9 +744,11 @@ terpene_heatmap_data <-
     treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
   group_by(treatment, assessment, resistance_class, class, compound) %>% 
   summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
+  # Terpene masses are averaged and log-transformed in cells to improve visual interpretation.
   left_join(
     indVal_pvals %>%
       mutate(sig = 0.5),
+    # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
     by = join_by(treatment, assessment, resistance_class, compound)
     ) %>% 
   mutate(
@@ -719,86 +760,59 @@ terpene_heatmap_data <-
   ) %>% 
   group_by(class) %>%
   mutate(mass_scl = mass/max(mass)) %>%
-  ungroup() %>%
-  glimpse()
+  # Raw terpene masses vary among terpene classes, making differences between cells hard to see. 
+  # Log-transformed averages are scaled within each terpene class to improve visual representation.
+  ungroup()
 ```
 
-    ## Rows: 624
-    ## Columns: 12
-    ## $ treatment        <ord> Control, Control, Control, Control, Control, Control,…
-    ## $ assessment       <chr> "NoRust", "NoRust", "NoRust", "NoRust", "NoRust", "No…
-    ## $ resistance_class <chr> "MGR", "MGR", "MGR", "MGR", "MGR", "MGR", "MGR", "MGR…
-    ## $ class            <chr> "Diterpene", "Diterpene", "Diterpene", "Diterpene", "…
-    ## $ compound         <fct> abietic, dehydroabietic, levopiramic, neoabietic, pal…
-    ## $ mass             <dbl> 0.05395689, 1.05793785, 0.13634210, 0.01165839, 0.144…
-    ## $ stat             <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.9042544, NA…
-    ## $ p.value          <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.001, NA, NA…
-    ## $ p_val            <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.001, NA, NA…
-    ## $ corr_p_val       <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.004333333, …
-    ## $ sig              <dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 0.5, NA, NA, …
-    ## $ mass_scl         <dbl> 0.019153968, 0.375553665, 0.048399607, 0.004138571, 0…
+![](terpenes_indicators_files/figure-gfm/indVal_heatmap_plot-1.png)<!-- -->
 
 ``` r
-terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
+citation("indicspecies")
 ```
 
-    ##  [1] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
-    ##  [7] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
-    ## [13] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
-    ## [19] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
-    ## [25] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
-    ## [31] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.004333333
-    ## [37] 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333
-    ## [43] 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333
-    ## [49] 0.004333333 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
-    ## [55] 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
-    ## [61] 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
-    ## [67] 0.008666667 0.026000000 0.026000000 0.026000000
+    ## 
+    ## To cite 'indicspecies' package in publications use:
+    ## 
+    ##   De Caceres, M., Legendre, P. (2009). Associations between species and
+    ##   groups of sites: indices and statistical inference. Ecology, URL
+    ##   http://sites.google.com/site/miqueldecaceres/
+    ## 
+    ## A BibTeX entry for LaTeX users is
+    ## 
+    ##   @Manual{,
+    ##     title = {Associations between species and groups of sites: indices and statistical inference},
+    ##     author = {Miquel {De Caceres} and Pierre Legendre},
+    ##     journal = {Ecology},
+    ##     year = {2009},
+    ##     url = {http://sites.google.com/site/miqueldecaceres/},
+    ##   }
+    ## 
+    ## Thank you for using 'indicspecies'
 
 ``` r
-y_breaks <- levels(terpene_heatmap_data$compound)
-y_labels_pre <- levels(terpene_heatmap_data$compound)
-y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <- 
-  c(expression(paste(alpha, "-humulene")),
-    expression(paste(alpha, "-pinene")),
-    expression(paste(alpha, "-terpineol")),
-    expression(paste(beta, "-caryophyllene")),
-    expression(paste(beta, "-phelandrene")),
-    expression(paste(beta, "-pinene")),
-    expression(paste("bornyl acetate")),
-    expression(paste(delta, "-cadinene")),
-    expression(paste("geranyl acetate")),
-    expression(paste("germacrene-D")),
-    expression(paste("germacrene-D-4-ol")),
-    expression(paste(delta, "-3-carene")),
-    expression(paste(gamma, "-terpinene"))
-  )
-y_labels <- parse(text = y_labels_pre)
-
-terpene_heatmap <- 
-  ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
-  facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
-  geom_tile(aes(fill = mass_scl)) +
-  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_continuous_sequential(name = "Terpene\nmass\n(scaled)\n", palette = "Grays") +
-  scale_linewidth(range = c(0.7, 0.7)) +
-  scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
-  labs(x = "", y = "") +
-  guides(linewidth = "none") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-        panel.grid = element_blank())
-
-terpene_heatmap
+citation("tidyverse")
 ```
 
-![](terpenes_indicators_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
-
-``` r
-ggsave(filename = "terpene_heatmap.pdf",
-       plot = terpene_heatmap,
-       device = "pdf",
-       path = paste0(getwd(), "/terpenes_indicators_files/"),
-       width = 8,
-       height = 8)
-```
+    ## 
+    ## To cite package 'tidyverse' in publications use:
+    ## 
+    ##   Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
+    ##   Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller
+    ##   E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V,
+    ##   Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). "Welcome to
+    ##   the tidyverse." _Journal of Open Source Software_, *4*(43), 1686.
+    ##   doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+    ## 
+    ## A BibTeX entry for LaTeX users is
+    ## 
+    ##   @Article{,
+    ##     title = {Welcome to the {tidyverse}},
+    ##     author = {Hadley Wickham and Mara Averick and Jennifer Bryan and Winston Chang and Lucy D'Agostino McGowan and Romain François and Garrett Grolemund and Alex Hayes and Lionel Henry and Jim Hester and Max Kuhn and Thomas Lin Pedersen and Evan Miller and Stephan Milton Bache and Kirill Müller and Jeroen Ooms and David Robinson and Dana Paige Seidel and Vitalie Spinu and Kohske Takahashi and Davis Vaughan and Claus Wilke and Kara Woo and Hiroaki Yutani},
+    ##     year = {2019},
+    ##     journal = {Journal of Open Source Software},
+    ##     volume = {4},
+    ##     number = {43},
+    ##     pages = {1686},
+    ##     doi = {10.21105/joss.01686},
+    ##   }
