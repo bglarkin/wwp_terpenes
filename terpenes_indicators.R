@@ -361,7 +361,7 @@ terpene_heatmap_data <-
 
 terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
 
-ggplot(aes(x = treatment, y = compound)) +
+ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
   geom_tile(aes(fill = mass)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +

@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 19 December, 2022
+Last updated: 31 May, 2023
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -61,9 +61,9 @@ treatment seedlings.
 
 Finally, the function `strassoc()` is used to produce bootstrapped
 confidence intervals on indicators’ strength of association to groups.
-The additional post-hoc test hopefully reduces the need for or concern
-over p-value corrections to `multipatt()`. The bootstrapped statistics
-and confidence intervals also allow the production of figures using
+The additional post-hoc test reduces the need for or concern over
+p-value corrections to `multipatt()`. The bootstrapped statistics and
+confidence intervals also allow the production of figures using
 `ggplot()` for easy interpretation.
 
 Indicator species analysis here is run on subsets of the seedling
@@ -89,7 +89,7 @@ brevity.
 
 ``` r
 # Package and library installation
-packages_needed <- c("tidyverse", "knitr", "indicspecies")
+packages_needed <- c("tidyverse", "knitr", "indicspecies", "colorspace")
 packages_installed <-
   packages_needed %in% rownames(installed.packages())
 ```
@@ -213,6 +213,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
     }) %>% 
     bind_rows(.id = "parameter") %>% 
     pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+    mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
     pivot_wider(names_from = parameter, values_from = value)
   )
   
@@ -226,6 +227,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
 
 ``` r
 indVal_postrust_ci <- data.frame()
+indVal_pvals <- data.frame()
 indic_post <- function(rc, a, p=999, nb=999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
@@ -266,8 +268,24 @@ indic_post <- function(rc, a, p=999, nb=999) {
       }) %>% 
         bind_rows(.id = "parameter") %>% 
         pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+        mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
         pivot_wider(names_from = parameter, values_from = value)
     )
+  
+  indVal_pvals <<-
+    rbind(indVal_pvals, 
+          indVal$sign %>% 
+            rownames_to_column(var = "compound") %>% 
+            mutate(resistance_class = rc,
+                   assessment = a,
+                   p_val = case_match(p.value, NA ~ 1, .default = p.value),
+                   corr_p_val = p.adjust(p_val, method = "BH")) %>% 
+            filter(compound %in% ind_compounds, p.value <= 0.05) %>% 
+            pivot_longer(cols = 2:5, names_to = "treatment", values_to = "present") %>% 
+            filter(present == 1, corr_p_val <= 0.05) %>% 
+            mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
+            select(-index, -present)
+          )
   
   print(paste(a, rc, sep = ", "))
   summary(indVal, indvalcomp = TRUE)
@@ -496,10 +514,10 @@ indic_post("MGR", "rust_ctrl")
     ##  Significance level (alpha): 0.05
     ## 
     ##  Total number of species: 26
-    ##  Selected number of species: 7 
+    ##  Selected number of species: 6 
     ##  Number of species associated to 1 group: 0 
     ##  Number of species associated to 2 groups: 4 
-    ##  Number of species associated to 3 groups: 3 
+    ##  Number of species associated to 3 groups: 2 
     ## 
     ##  List of species associated to each combination: 
     ## 
@@ -513,11 +531,10 @@ indic_post("MGR", "rust_ctrl")
     ## palustric 0.9671 1.0000 0.983   0.001 ***
     ## abietic   0.9470 0.9000 0.923   0.001 ***
     ## 
-    ##  Group EMF+FFE+FFE+EMF  #sps.  3 
-    ##                       A      B  stat p.value    
-    ## neoabietic       0.9907 0.9667 0.979   0.001 ***
-    ## levopiramic      0.9807 0.9333 0.957   0.001 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856   0.042 *  
+    ##  Group EMF+FFE+FFE+EMF  #sps.  2 
+    ##                  A      B  stat p.value    
+    ## neoabietic  0.9907 0.9667 0.979   0.001 ***
+    ## levopiramic 0.9807 0.9333 0.957   0.001 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -639,7 +656,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.003 **
+    ## abietic 0.8550 0.8947 0.875   0.004 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -676,3 +693,54 @@ statistic is non-significant. Zero-overlapping CIs are shown as red on
 the plot.
 
 ![](terpenes_indicators_files/figure-gfm/indVal_rustinoc_plot-1.png)<!-- -->
+
+New figure, work in progress
+
+``` r
+terpene_heatmap_data <- 
+  data$terpene %>%
+  filter(mass_type == "dw", assessment != "pre_rust") %>%
+  mutate(
+    treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
+  group_by(treatment, assessment, resistance_class, class, compound) %>% 
+  summarize(mass = log1p(median(mass)), .groups = "drop") %>%
+  left_join(
+    indVal_pvals %>%
+      mutate(sig = 0.5),
+    by = join_by(treatment, assessment, resistance_class, compound)
+    ) %>% 
+  mutate(
+    assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class)
+  )
+
+terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
+```
+
+    ##  [1] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
+    ##  [7] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
+    ## [13] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
+    ## [19] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
+    ## [25] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286
+    ## [31] 0.003714286 0.003714286 0.003714286 0.003714286 0.003714286 0.004333333
+    ## [37] 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333
+    ## [43] 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333 0.004333333
+    ## [49] 0.004333333 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
+    ## [55] 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
+    ## [61] 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667 0.008666667
+    ## [67] 0.008666667 0.026000000 0.026000000 0.026000000
+
+``` r
+ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
+  facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
+  geom_tile(aes(fill = mass)) +
+  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
+  scale_fill_continuous_sequential(palette = "Grays") +
+  scale_linewidth(range = c(0.5, 0.5)) +
+  labs(x = "", y = "") +
+  guides(linewidth = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+![](terpenes_indicators_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
