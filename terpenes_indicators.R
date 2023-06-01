@@ -417,7 +417,7 @@ terpene_heatmap <-
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
   geom_tile(aes(fill = mass_scl)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray10") +
+  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray15") +
   scale_linewidth(range = c(0.7, 0.7)) +
   scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
