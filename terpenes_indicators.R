@@ -363,6 +363,7 @@ ggplot(aes(x = treatment, y = stat, color = color0)) +
 #' and produce a better visual display of differences among treatments. 
 #' 
 #' **Data wrangling for heatmap**
+#' 
 #' Data wrangling is shown here because much of the source data is modified to produce the figure. 
 #+ indVal_heatmap_data
 terpene_heatmap_data <- 
@@ -416,15 +417,15 @@ terpene_heatmap <-
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
   geom_tile(aes(fill = mass_scl)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_gradient(low = "white", high = "gray15") +
-  scale_linewidth(range = c(0.8, 0.8)) +
+  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray10") +
+  scale_linewidth(range = c(0.7, 0.7)) +
   scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
   guides(linewidth = "none") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
         panel.grid = element_blank())
-#+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(9,10)
+#+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(9,9)
 terpene_heatmap
 #+ indVal_heatmap_plot_pub,echo=FALSE
 ggsave(filename = "terpene_heatmap.pdf",

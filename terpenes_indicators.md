@@ -36,6 +36,7 @@ Last updated: 01 June, 2023
     - <a href="#heatmap-of-all-terpenes-and-indicators"
       id="toc-heatmap-of-all-terpenes-and-indicators">Heatmap of all terpenes
       and indicators</a>
+- <a href="#references" id="toc-references">References</a>
 
 # Description
 
@@ -120,8 +121,7 @@ source("data_etl.R")
 ```
 
 ``` r
-sapply(data, function(x)
-  head(x, 2))
+sapply(data, function(x) head(x, 2))
 ```
 
     ## $terpene_meta
@@ -527,7 +527,7 @@ indic_post("MGR", "rust_ctrl")
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   0.001 ***
-    ## a_terpineol 0.8177 1.0000 0.904   0.001 ***
+    ## a_terpineol 0.8177 1.0000 0.904   0.002 ** 
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
@@ -538,7 +538,7 @@ indic_post("MGR", "rust_ctrl")
     ##                       A      B  stat p.value    
     ## neoabietic       0.9907 0.9667 0.979   0.001 ***
     ## levopiramic      0.9807 0.9333 0.957   0.001 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856   0.042 *  
+    ## sandaracopiramic 0.8450 0.8667 0.856   0.045 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -660,7 +660,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.008 **
+    ## abietic 0.8550 0.8947 0.875   0.007 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -734,7 +734,8 @@ produced by `strassoc()` aren’t limited by the lack of p value
 correction and produce a better visual display of differences among
 treatments.
 
-**Data wrangling for heatmap**
+**Data wrangling for heatmap** Data wrangling is shown here because much
+of the source data is modified to produce the figure.
 
 ``` r
 terpene_heatmap_data <- 
@@ -752,7 +753,7 @@ terpene_heatmap_data <-
     by = join_by(treatment, assessment, resistance_class, compound)
     ) %>% 
   mutate(
-    assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
+    assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
@@ -767,8 +768,10 @@ terpene_heatmap_data <-
 
 ![](terpenes_indicators_files/figure-gfm/indVal_heatmap_plot-1.png)<!-- -->
 
+# References
+
 ``` r
-citation("indicspecies")
+print(citation("indicspecies"), bibtex = FALSE)
 ```
 
     ## 
@@ -778,20 +781,10 @@ citation("indicspecies")
     ##   groups of sites: indices and statistical inference. Ecology, URL
     ##   http://sites.google.com/site/miqueldecaceres/
     ## 
-    ## A BibTeX entry for LaTeX users is
-    ## 
-    ##   @Manual{,
-    ##     title = {Associations between species and groups of sites: indices and statistical inference},
-    ##     author = {Miquel {De Caceres} and Pierre Legendre},
-    ##     journal = {Ecology},
-    ##     year = {2009},
-    ##     url = {http://sites.google.com/site/miqueldecaceres/},
-    ##   }
-    ## 
     ## Thank you for using 'indicspecies'
 
 ``` r
-citation("tidyverse")
+print(citation("tidyverse"), bibtex = FALSE)
 ```
 
     ## 
@@ -803,16 +796,3 @@ citation("tidyverse")
     ##   Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). "Welcome to
     ##   the tidyverse." _Journal of Open Source Software_, *4*(43), 1686.
     ##   doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
-    ## 
-    ## A BibTeX entry for LaTeX users is
-    ## 
-    ##   @Article{,
-    ##     title = {Welcome to the {tidyverse}},
-    ##     author = {Hadley Wickham and Mara Averick and Jennifer Bryan and Winston Chang and Lucy D'Agostino McGowan and Romain François and Garrett Grolemund and Alex Hayes and Lionel Henry and Jim Hester and Max Kuhn and Thomas Lin Pedersen and Evan Miller and Stephan Milton Bache and Kirill Müller and Jeroen Ooms and David Robinson and Dana Paige Seidel and Vitalie Spinu and Kohske Takahashi and Davis Vaughan and Claus Wilke and Kara Woo and Hiroaki Yutani},
-    ##     year = {2019},
-    ##     journal = {Journal of Open Source Software},
-    ##     volume = {4},
-    ##     number = {43},
-    ##     pages = {1686},
-    ##     doi = {10.21105/joss.01686},
-    ##   }
