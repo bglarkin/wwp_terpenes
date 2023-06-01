@@ -348,7 +348,7 @@ terpene_heatmap_data <-
   mutate(
     treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
   group_by(treatment, assessment, resistance_class, class, compound) %>% 
-  summarize(mass = log1p(median(mass)), .groups = "drop") %>%
+  summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
   left_join(
     indVal_pvals %>%
       mutate(sig = 0.5),
@@ -356,18 +356,56 @@ terpene_heatmap_data <-
     ) %>% 
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "NoRust", "rust_inoc" ~ "Rust", .default = assessment),
-    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class)
-  )
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
+    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    compound = factor(compound)
+  ) %>% 
+  group_by(class) %>%
+  mutate(mass_scl = mass/max(mass)) %>%
+  ungroup() %>%
+  glimpse()
 
 terpene_heatmap_data$corr_p_val[!is.na(terpene_heatmap_data$corr_p_val)] %>% sort()
 
-ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
+y_breaks <- levels(terpene_heatmap_data$compound)
+y_labels_pre <- levels(terpene_heatmap_data$compound)
+y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <- 
+  c(expression(paste(alpha, "-humulene")),
+    expression(paste(alpha, "-pinene")),
+    expression(paste(alpha, "-terpineol")),
+    expression(paste(beta, "-caryophyllene")),
+    expression(paste(beta, "-phelandrene")),
+    expression(paste(beta, "-pinene")),
+    expression(paste("bornyl acetate")),
+    expression(paste(delta, "-cadinene")),
+    expression(paste("geranyl acetate")),
+    expression(paste("germacrene-D")),
+    expression(paste("germacrene-D-4-ol")),
+    expression(paste(delta, "-3-carene")),
+    expression(paste(gamma, "-terpinene"))
+  )
+y_labels <- parse(text = y_labels_pre)
+
+terpene_heatmap <- 
+  ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
   facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
-  geom_tile(aes(fill = mass)) +
+  geom_tile(aes(fill = mass_scl)) +
   geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
-  scale_fill_continuous_sequential(palette = "Grays") +
-  scale_linewidth(range = c(0.5, 0.5)) +
+  scale_fill_continuous_sequential(name = "Terpene\nmass\n(scaled)\n", palette = "Grays") +
+  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
   guides(linewidth = "none") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        panel.grid = element_blank())
+
+terpene_heatmap
+
+ggsave(filename = "terpene_heatmap.pdf",
+       plot = terpene_heatmap,
+       device = "pdf",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 8,
+       height = 8)
