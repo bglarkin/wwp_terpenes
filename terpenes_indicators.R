@@ -433,8 +433,9 @@ ggsave(filename = "terpene_heatmap.pdf",
        plot = terpene_heatmap,
        device = "pdf",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
-       width = 8,
-       height = 7)
+       width = 17.35,
+       height = 15.5,
+       units = "cm")
 #' 
 #' # References
 #+ citations
