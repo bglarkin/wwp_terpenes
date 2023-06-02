@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 01 June, 2023
+Last updated: 02 June, 2023
 
 - <a href="#description" id="toc-description">Description</a>
 - <a href="#package-and-library-installation"
@@ -527,7 +527,7 @@ indic_post("MGR", "rust_ctrl")
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   0.001 ***
-    ## a_terpineol 0.8177 1.0000 0.904   0.002 ** 
+    ## a_terpineol 0.8177 1.0000 0.904   0.001 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
@@ -538,7 +538,7 @@ indic_post("MGR", "rust_ctrl")
     ##                       A      B  stat p.value    
     ## neoabietic       0.9907 0.9667 0.979   0.001 ***
     ## levopiramic      0.9807 0.9333 0.957   0.001 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856   0.045 *  
+    ## sandaracopiramic 0.8450 0.8667 0.856   0.047 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -660,7 +660,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.007 **
+    ## abietic 0.8550 0.8947 0.875   0.008 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -734,8 +734,10 @@ produced by `strassoc()` aren’t limited by the lack of p value
 correction and produce a better visual display of differences among
 treatments.
 
-**Data wrangling for heatmap** Data wrangling is shown here because much
-of the source data is modified to produce the figure.
+**Data wrangling for heatmap**
+
+Data wrangling is shown here because much of the source data is modified
+to produce the figure.
 
 ``` r
 terpene_heatmap_data <- 

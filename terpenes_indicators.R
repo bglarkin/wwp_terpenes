@@ -411,6 +411,8 @@ y_labels_pre[c(1,2,3,5,6,7,9,12,14,15,16,25,26)] <-
     expression(paste(gamma, "-terpinene"))
   )
 y_labels <- parse(text = y_labels_pre)
+#+ newPhyt_style,echo=FALSE
+source("gg_style_newPhyt.txt")
 #+ indVal_heatmap_script,echo=FALSE
 terpene_heatmap <- 
   ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
@@ -422,10 +424,9 @@ terpene_heatmap <-
   scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
   labs(x = "", y = "") +
   guides(linewidth = "none") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-        panel.grid = element_blank())
-#+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(9,9)
+  theme_np +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(8,7)
 terpene_heatmap
 #+ indVal_heatmap_plot_pub,echo=FALSE
 ggsave(filename = "terpene_heatmap.pdf",
@@ -433,7 +434,7 @@ ggsave(filename = "terpene_heatmap.pdf",
        device = "pdf",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
        width = 8,
-       height = 8)
+       height = 7)
 #' 
 #' # References
 #+ citations
