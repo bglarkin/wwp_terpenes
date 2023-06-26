@@ -100,21 +100,21 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
   indVal_boot <- strassoc(X, Y$treatment, func = "IndVal.g", nboot=nb)
   
   indVal_prerust_ci <<- 
-  rbind(
-    indVal_prerust_ci,
-  lapply(indVal_boot, function(x) {
-    data.frame(x) %>% 
-      rownames_to_column(var = "compound") %>% 
-      filter(compound %in% ind_compounds) %>% 
-      mutate(resistance_class = rc,
-             assessment = a) %>% 
-      select(resistance_class, assessment, compound, everything())
-    }) %>% 
-    bind_rows(.id = "parameter") %>% 
-    pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
-    mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
-    pivot_wider(names_from = parameter, values_from = value)
-  )
+    rbind(
+      indVal_prerust_ci,
+      lapply(indVal_boot, function(x) {
+        data.frame(x) %>% 
+          rownames_to_column(var = "compound") %>% 
+          filter(compound %in% ind_compounds) %>% 
+          mutate(resistance_class = rc,
+                 assessment = a) %>% 
+          select(resistance_class, assessment, compound, everything())
+      }) %>% 
+        bind_rows(.id = "parameter") %>% 
+        pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+        mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
+        pivot_wider(names_from = parameter, values_from = value)
+    )
   
   print(rc)
   summary(indVal, indvalcomp = TRUE)
@@ -182,7 +182,7 @@ indic_post <- function(rc, a, p=999, nb=999) {
             filter(present == 1, corr_p_val <= 0.05) %>% 
             mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
             select(-index, -present)
-          )
+    )
   
   print(paste(a, rc, sep = ", "))
   summary(indVal, indvalcomp = TRUE)
@@ -221,7 +221,7 @@ indic_pre("MGR")
 source("gg_style.txt")
 #+ indVal_prerust_plot,echo=FALSE,fig.dim=c(9,6)
 indVal_prerust_ci %>%
-ggplot(aes(x = treatment, y = stat)) +
+  ggplot(aes(x = treatment, y = stat)) +
   facet_grid(rows = vars(compound), cols = vars(resistance_class)) +
   geom_hline(yintercept = 0, linetype = "dotted") +
   geom_pointrange(aes(ymin = lowerCI, ymax = upperCI)) +
@@ -272,7 +272,7 @@ indic_post("MGR", "rust_ctrl")
 indVal_postrust_ci %>% 
   filter(assessment == "rust_ctrl") %>% 
   mutate(color0 = case_when(lowerCI == 0 ~ "nosig", TRUE ~ "sig")) %>% 
-ggplot(aes(x = treatment, y = stat, color = color0)) +
+  ggplot(aes(x = treatment, y = stat, color = color0)) +
   facet_grid(rows = vars(compound), cols = vars(resistance_class)) +
   geom_hline(yintercept = 0, linetype = "dotted") +
   geom_pointrange(aes(ymin = lowerCI, ymax = upperCI)) +
@@ -323,7 +323,7 @@ indic_post("MGR", "rust_inoc")
 indVal_postrust_ci %>% 
   filter(assessment == "rust_inoc") %>% 
   mutate(color0 = case_when(lowerCI == 0 ~ "nosig", TRUE ~ "sig")) %>% 
-ggplot(aes(x = treatment, y = stat, color = color0)) +
+  ggplot(aes(x = treatment, y = stat, color = color0)) +
   facet_grid(rows = vars(compound), cols = vars(resistance_class)) +
   geom_hline(yintercept = 0, linetype = "dotted") +
   geom_pointrange(aes(ymin = lowerCI, ymax = upperCI)) +
@@ -365,6 +365,10 @@ ggplot(aes(x = treatment, y = stat, color = color0)) +
 #' **Data wrangling for heatmap**
 #' 
 #' Data wrangling is shown here because much of the source data is modified to produce the figure. 
+#' 
+#' Graphics outputs (not shown) are doubled in size and have all object sizes doubled as well
+#' to improve clarity when shrunk, as per publisher guidelines.
+#' 
 #+ indVal_heatmap_data
 terpene_heatmap_data <- 
   data$terpene %>%
@@ -379,7 +383,7 @@ terpene_heatmap_data <-
       mutate(sig = 0.5),
     # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
     by = join_by(treatment, assessment, resistance_class, compound)
-    ) %>% 
+  ) %>% 
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
@@ -428,13 +432,45 @@ terpene_heatmap <-
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 #+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(8,7)
 terpene_heatmap
-#+ indVal_heatmap_plot_pub,echo=FALSE
+#+ newPhyt_style_2x,echo=FALSE
+source("gg_style_newPhyt_2x.txt")
+#+ indVal_heatmap_script_2x,echo=FALSE
+terpene_heatmap_2x <- 
+  ggplot(terpene_heatmap_data, aes(x = treatment, y = compound)) +
+  facet_grid(class ~ assessment + resistance_class, scales = "free", space = "free") +
+  geom_tile(aes(fill = mass_scl)) +
+  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
+  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray15") +
+  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_y_discrete(breaks = y_breaks, label = y_labels, limits = rev) +
+  labs(x = "", y = "") +
+  guides(linewidth = "none") +
+  theme_np +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#+ indVal_heatmap_plot_pdf,echo=FALSE
 ggsave(filename = "terpene_heatmap.pdf",
-       plot = terpene_heatmap,
+       plot = terpene_heatmap_2x,
        device = "pdf",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
-       width = 17.35,
-       height = 15.5,
+       width = 17.35*2,
+       height = 15.5*2,
+       units = "cm")
+#+ indVal_heatmap_plot_eps,echo=FALSE
+ggsave(filename = "terpene_heatmap.eps",
+       plot = terpene_heatmap_2x,
+       device = "eps",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 17.35*2,
+       height = 15.5*2,
+       units = "cm")
+#+ indVal_heatmap_plot_tiff,echo=FALSE
+ggsave(filename = "terpene_heatmap.tiff",
+       plot = terpene_heatmap_2x,
+       device = "tiff",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 17.35*2,
+       height = 15.5*2,
+       dpi = 600,
        units = "cm")
 #' 
 #' # References

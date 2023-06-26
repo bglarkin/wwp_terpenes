@@ -3,40 +3,28 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 02 June, 2023
+Last updated: 26 June, 2023
 
-- <a href="#description" id="toc-description">Description</a>
-- <a href="#package-and-library-installation"
-  id="toc-package-and-library-installation">Package and library
-  installation</a>
-- <a href="#data" id="toc-data">Data</a>
-- <a href="#functions" id="toc-functions">Functions</a>
-  - <a href="#pre-rust-function" id="toc-pre-rust-function">Pre-rust
-    function</a>
-  - <a href="#post-rust-function" id="toc-post-rust-function">Post-rust
-    function</a>
-- <a href="#results" id="toc-results">Results</a>
-  - <a href="#pre-rust-results" id="toc-pre-rust-results">Pre-rust
-    results</a>
-    - <a href="#plot-of-indicators-and-confidence-intervals"
-      id="toc-plot-of-indicators-and-confidence-intervals">Plot of indicators
-      and confidence intervals</a>
-  - <a href="#post-rust-results" id="toc-post-rust-results">Post-rust
-    results</a>
-    - <a href="#rust-control-seedlings" id="toc-rust-control-seedlings">Rust
-      control seedlings</a>
-    - <a href="#plot-of-indicators-and-confidence-intervals-1"
-      id="toc-plot-of-indicators-and-confidence-intervals-1">Plot of
-      indicators and confidence intervals</a>
-    - <a href="#rust-inoculated-seedlings"
-      id="toc-rust-inoculated-seedlings">Rust-inoculated seedlings</a>
-    - <a href="#plot-of-indicators-and-confidence-intervals-2"
-      id="toc-plot-of-indicators-and-confidence-intervals-2">Plot of
-      indicators and confidence intervals</a>
-    - <a href="#heatmap-of-all-terpenes-and-indicators"
-      id="toc-heatmap-of-all-terpenes-and-indicators">Heatmap of all terpenes
-      and indicators</a>
-- <a href="#references" id="toc-references">References</a>
+- [Description](#description)
+- [Package and library installation](#package-and-library-installation)
+- [Data](#data)
+- [Functions](#functions)
+  - [Pre-rust function](#pre-rust-function)
+  - [Post-rust function](#post-rust-function)
+- [Results](#results)
+  - [Pre-rust results](#pre-rust-results)
+    - [Plot of indicators and confidence
+      intervals](#plot-of-indicators-and-confidence-intervals)
+  - [Post-rust results](#post-rust-results)
+    - [Rust control seedlings](#rust-control-seedlings)
+    - [Plot of indicators and confidence
+      intervals](#plot-of-indicators-and-confidence-intervals-1)
+    - [Rust-inoculated seedlings](#rust-inoculated-seedlings)
+    - [Plot of indicators and confidence
+      intervals](#plot-of-indicators-and-confidence-intervals-2)
+    - [Heatmap of all terpenes and
+      indicators](#heatmap-of-all-terpenes-and-indicators)
+- [References](#references)
 
 # Description
 
@@ -133,12 +121,11 @@ sapply(data, function(x) head(x, 2))
     ## 
     ## $terpene
     ## # A tibble: 2 × 11
-    ##   tree_ID  year treat…¹ asses…² block family class compo…³ mass_…⁴  mass resis…⁵
-    ##     <dbl> <dbl> <chr>   <chr>   <dbl> <chr>  <chr> <chr>   <chr>   <dbl> <chr>  
-    ## 1    1002  2019 FFE     pre_ru…     1 ENDO-… dite… dehydr… dw      0.421 suscep…
-    ## 2    1002  2019 FFE     pre_ru…     1 ENDO-… dite… levopi… dw      8.63  suscep…
-    ## # … with abbreviated variable names ¹​treatment, ²​assessment, ³​compound,
-    ## #   ⁴​mass_type, ⁵​resistance_class
+    ##   tree_ID  year treatment assessment block family class compound mass_type  mass
+    ##     <dbl> <dbl> <chr>     <chr>      <dbl> <chr>  <chr> <chr>    <chr>     <dbl>
+    ## 1    1002  2019 FFE       pre_rust       1 ENDO-… dite… dehydro… dw        0.421
+    ## 2    1002  2019 FFE       pre_rust       1 ENDO-… dite… levopir… dw        8.63 
+    ## # ℹ 1 more variable: resistance_class <chr>
     ## 
     ## $tree_height
     ## # A tibble: 2 × 4
@@ -160,9 +147,9 @@ sapply(data, function(x) head(x, 2))
     ##     <dbl>     <dbl> <dbl> <dbl> <dbl> <chr>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1    1001      3400    25     4     6 Yes        1    20     4     3     1     2
     ## 2    1002      3400    43     4     7 Yes        6    29     4     5     1     3
-    ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
-    ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
-    ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
+    ## # ℹ 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>, dm4 <dbl>,
+    ## #   sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>, bi3 <dbl>,
+    ## #   nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
 
 # Functions
 
@@ -204,21 +191,21 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
   indVal_boot <- strassoc(X, Y$treatment, func = "IndVal.g", nboot=nb)
   
   indVal_prerust_ci <<- 
-  rbind(
-    indVal_prerust_ci,
-  lapply(indVal_boot, function(x) {
-    data.frame(x) %>% 
-      rownames_to_column(var = "compound") %>% 
-      filter(compound %in% ind_compounds) %>% 
-      mutate(resistance_class = rc,
-             assessment = a) %>% 
-      select(resistance_class, assessment, compound, everything())
-    }) %>% 
-    bind_rows(.id = "parameter") %>% 
-    pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
-    mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
-    pivot_wider(names_from = parameter, values_from = value)
-  )
+    rbind(
+      indVal_prerust_ci,
+      lapply(indVal_boot, function(x) {
+        data.frame(x) %>% 
+          rownames_to_column(var = "compound") %>% 
+          filter(compound %in% ind_compounds) %>% 
+          mutate(resistance_class = rc,
+                 assessment = a) %>% 
+          select(resistance_class, assessment, compound, everything())
+      }) %>% 
+        bind_rows(.id = "parameter") %>% 
+        pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
+        mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
+        pivot_wider(names_from = parameter, values_from = value)
+    )
   
   print(rc)
   summary(indVal, indvalcomp = TRUE)
@@ -288,7 +275,7 @@ indic_post <- function(rc, a, p=999, nb=999) {
             filter(present == 1, corr_p_val <= 0.05) %>% 
             mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
             select(-index, -present)
-          )
+    )
   
   print(paste(a, rc, sep = ", "))
   summary(indVal, indvalcomp = TRUE)
@@ -527,12 +514,12 @@ indic_post("MGR", "rust_ctrl")
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   0.001 ***
-    ## a_terpineol 0.8177 1.0000 0.904   0.003 ** 
+    ## a_terpineol 0.8177 1.0000 0.904   0.001 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
     ## palustric 0.9671 1.0000 0.983   0.001 ***
-    ## abietic   0.9470 0.9000 0.923   0.001 ***
+    ## abietic   0.9470 0.9000 0.923   0.002 ** 
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
@@ -658,8 +645,8 @@ indic_post("MGR", "rust_inoc")
     ##  List of species associated to each combination: 
     ## 
     ##  Group EMF+FFE  #sps.  1 
-    ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.006 **
+    ##              A      B  stat p.value  
+    ## abietic 0.8550 0.8947 0.875   0.011 *
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -738,6 +725,10 @@ treatments.
 Data wrangling is shown here because much of the source data is modified
 to produce the figure.
 
+Graphics outputs (not shown) are doubled in size and have all object
+sizes doubled as well to improve clarity when shrunk, as per publisher
+guidelines.
+
 ``` r
 terpene_heatmap_data <- 
   data$terpene %>%
@@ -752,7 +743,7 @@ terpene_heatmap_data <-
       mutate(sig = 0.5),
     # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
     by = join_by(treatment, assessment, resistance_class, compound)
-    ) %>% 
+  ) %>% 
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
@@ -775,12 +766,11 @@ terpene_heatmap_data <-
 print(citation("indicspecies"), bibtex = FALSE)
 ```
 
-    ## 
     ## To cite 'indicspecies' package in publications use:
     ## 
-    ##   De Caceres, M., Legendre, P. (2009). Associations between species and
-    ##   groups of sites: indices and statistical inference. Ecology, URL
-    ##   http://sites.google.com/site/miqueldecaceres/
+    ##   De Cáceres M, Legendre P (2009). "Associations between species and
+    ##   groups of sites: indices and statistical inference." _Ecology_, *90*,
+    ##   3566-3574. doi:10.1890/08-1823.1 <https://doi.org/10.1890/08-1823.1>.
     ## 
     ## Thank you for using 'indicspecies'
 
@@ -788,7 +778,6 @@ print(citation("indicspecies"), bibtex = FALSE)
 print(citation("tidyverse"), bibtex = FALSE)
 ```
 
-    ## 
     ## To cite package 'tidyverse' in publications use:
     ## 
     ##   Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,

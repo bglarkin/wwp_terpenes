@@ -2,7 +2,7 @@
 # ————————————————————
 
 # Use multiplier to change object sizes for raster format plots
-mp <- 1
+mp <- 2
 
 theme_np = 
   theme_bw() +
