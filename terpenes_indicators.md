@@ -391,7 +391,7 @@ The plot below shows indicator statistics and confidence intervals on
 single-group comparisons. The statistic shown may not match a
 significant pooled-group statistic if one was found using `multipatt()`.
 Confidence intervals are based on boostrap replication in `strassoc()`
-(n=1000). Confidence intervals which overlap zero mean that the
+(n=1999). Confidence intervals which overlap zero mean that the
 statistic is non-significant.
 
 ![](terpenes_indicators_files/figure-gfm/indVal_prerust_plot-1.png)<!-- -->
@@ -519,7 +519,7 @@ indic_post("MGR", "rust_ctrl")
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   5e-04 ***
-    ## a_terpineol 0.8177 1.0000 0.904   5e-04 ***
+    ## a_terpineol 0.8177 1.0000 0.904   1e-03 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
@@ -552,7 +552,7 @@ The plot below shows indicator statistics and confidence intervals on
 single-group comparisons. The statistic shown may not match a
 significant pooled-group statistic if one was found using `multipatt()`.
 Confidence intervals are based on boostrap replication in `strassoc()`
-(n=1000). Confidence intervals which overlap zero mean that the
+(n=1999). Confidence intervals which overlap zero mean that the
 statistic is non-significant. Zero-overlapping CIs are shown as red on
 the plot.
 
@@ -651,7 +651,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875  0.0095 **
+    ## abietic 0.8550 0.8947 0.875   0.006 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -683,7 +683,7 @@ The plot below shows indicator statistics and confidence intervals on
 single-group comparisons. The statistic shown may not match a
 significant pooled-group statistic if one was found using `multipatt()`.
 Confidence intervals are based on boostrap replication in `strassoc()`
-(n=1000). Confidence intervals which overlap zero mean that the
+(n=1999). Confidence intervals which overlap zero mean that the
 statistic is non-significant. Zero-overlapping CIs are shown as red on
 the plot.
 
@@ -709,11 +709,11 @@ Boxes around cells in the heatmap outline indicate that the terpene is a
 significant indicator for that combination of experimental factors at
 p\<0.05. Indicator statistics were determined using `multipatt()` from
 package [indicspecies](http://sites.google.com/site/miqueldecaceres/)
-(De Caceres & Legendre 2009) with 1000 permutations. P values were
+(De Caceres & Legendre 2009) with 1999 permutations. P values were
 corrected for multiple comparisons. Significance was visually
 corroborated using `strassoc()`, also from package indicspecies, where
 95% confidence intervals around the indicator statistic were computed
-with 1000 bootstrap samples. Significance is inferred when the 95%
+with 1999 bootstrap samples. Significance is inferred when the 95%
 confidence intervals do not include zero.
 
 Note: the indicator statistic returned by `multipatt()` is based on

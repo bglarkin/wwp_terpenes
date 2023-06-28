@@ -219,7 +219,7 @@ indic_pre("MGR")
 #' ### Plot of indicators and confidence intervals
 #' The plot below shows indicator statistics and confidence intervals on single-group comparisons. 
 #' The statistic shown may not match a significant pooled-group statistic if one was found using 
-#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1000). 
+#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1999). 
 #' Confidence intervals which overlap zero mean that the statistic is non-significant. 
 #+ ggstyle,echo=FALSE
 source("gg_style.txt")
@@ -269,7 +269,7 @@ indic_post("MGR", "rust_ctrl")
 #' ### Plot of indicators and confidence intervals
 #' The plot below shows indicator statistics and confidence intervals on single-group comparisons. 
 #' The statistic shown may not match a significant pooled-group statistic if one was found using 
-#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1000). 
+#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1999). 
 #' Confidence intervals which overlap zero mean that the statistic is non-significant. Zero-overlapping
 #' CIs are shown as red on the plot. 
 #+ indVal_rustctrl_plot,echo=FALSE,fig.dim=c(9,16)
@@ -320,7 +320,7 @@ indic_post("MGR", "rust_inoc")
 #' ### Plot of indicators and confidence intervals
 #' The plot below shows indicator statistics and confidence intervals on single-group comparisons. 
 #' The statistic shown may not match a significant pooled-group statistic if one was found using 
-#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1000). 
+#' `multipatt()`. Confidence intervals are based on boostrap replication in `strassoc()` (n=1999). 
 #' Confidence intervals which overlap zero mean that the statistic is non-significant. Zero-overlapping
 #' CIs are shown as red on the plot.  
 #+ indVal_rustinoc_plot,echo=FALSE,fig.dim=c(9,12)
@@ -354,10 +354,10 @@ indVal_postrust_ci %>%
 #' Boxes around cells in the heatmap outline indicate that the terpene is a significant indicator 
 #' for that combination of experimental factors at p<0.05. Indicator statistics were determined using `multipatt()` from
 #' package [indicspecies](http://sites.google.com/site/miqueldecaceres/) (De Caceres & Legendre 2009) 
-#' with 1000 permutations. P values were corrected for multiple comparisons.
+#' with 1999 permutations. P values were corrected for multiple comparisons.
 #' Significance was visually corroborated using `strassoc()`, also from 
 #' package indicspecies, where 95% confidence intervals around the indicator statistic 
-#' were computed with 1000 bootstrap samples. Significance is
+#' were computed with 1999 bootstrap samples. Significance is
 #' inferred when the 95% confidence intervals do not include zero.
 #' 
 #' Note: the indicator statistic returned by `multipatt()` is based on grouping treatment classes. It 
