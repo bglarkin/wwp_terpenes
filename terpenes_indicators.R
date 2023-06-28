@@ -69,10 +69,14 @@ sapply(data, function(x) head(x, 2))
 #' are needed because with the pre-rust assessment, only treatments are considered within each 
 #' resistance class. Post-rust, assessments and treatments must be considered within each resistance class.
 #' 
+#' For the permutation test in `multipatt()`, 1999 permutations are used. In the strength of association test, 
+#' 1999 bootstrap replicates are selected in `strassoc()`. These can be changed using the appropriate arguments
+#' in the following functions. 
+#' 
 #' ## Pre-rust function 
 #+ pre-rust function
 indVal_prerust_ci <- data.frame()
-indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
+indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
            assessment == a,
@@ -125,7 +129,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
 #+ post_rust_function
 indVal_postrust_ci <- data.frame()
 indVal_pvals <- data.frame()
-indic_post <- function(rc, a, p=999, nb=999) {
+indic_post <- function(rc, a, p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
            assessment == a,

@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 26 June, 2023
+Last updated: 28 June, 2023
 
 - [Description](#description)
 - [Package and library installation](#package-and-library-installation)
@@ -159,11 +159,16 @@ the pre-rust assessment, only treatments are considered within each
 resistance class. Post-rust, assessments and treatments must be
 considered within each resistance class.
 
+For the permutation test in `multipatt()`, 1999 permutations are used.
+In the strength of association test, 1999 bootstrap replicates are
+selected in `strassoc()`. These can be changed using the appropriate
+arguments in the following functions.
+
 ## Pre-rust function
 
 ``` r
 indVal_prerust_ci <- data.frame()
-indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
+indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
            assessment == a,
@@ -218,7 +223,7 @@ indic_pre <- function(rc, a="pre_rust", p=999, nb=999) {
 ``` r
 indVal_postrust_ci <- data.frame()
 indVal_pvals <- data.frame()
-indic_post <- function(rc, a, p=999, nb=999) {
+indic_post <- function(rc, a, p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
            assessment == a,
@@ -337,7 +342,7 @@ indic_pre("susceptible")
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##              A      B  stat p.value    
-    ## abietic 0.8907 1.0000 0.944   0.001 ***
+    ## abietic 0.8907 1.0000 0.944   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -368,7 +373,7 @@ indic_pre("MGR")
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##              A      B  stat p.value    
-    ## abietic 0.9073 0.9583 0.932   0.001 ***
+    ## abietic 0.9073 0.9583 0.932   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -425,19 +430,19 @@ indic_post("QDR", "rust_ctrl")
     ## 
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
-    ## ocimene     0.9900 0.9667 0.978   0.001 ***
-    ## a_terpineol 0.8580 0.9667 0.911   0.001 ***
+    ## ocimene     0.9900 0.9667 0.978   5e-04 ***
+    ## a_terpineol 0.8580 0.9667 0.911   5e-04 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
-    ## abietic   0.9366 0.9322 0.934   0.001 ***
-    ## palustric 0.8937 0.9153 0.904   0.001 ***
+    ## abietic   0.9366 0.9322 0.934   5e-04 ***
+    ## palustric 0.8937 0.9153 0.904   5e-04 ***
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  3 
     ##                     A      B  stat p.value    
-    ## neoabietic     0.9759 0.9326 0.954   0.001 ***
-    ## levopiramic    0.9724 0.8989 0.935   0.001 ***
-    ## dehydroabietic 1.0000 0.7978 0.893   0.001 ***
+    ## neoabietic     0.9759 0.9326 0.954   5e-04 ***
+    ## levopiramic    0.9724 0.8989 0.935   5e-04 ***
+    ## dehydroabietic 1.0000 0.7978 0.893   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -469,19 +474,19 @@ indic_post("susceptible", "rust_ctrl")
     ## 
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
-    ## ocimene     0.9818 1.0000 0.991   0.001 ***
-    ## a_terpineol 0.8562 1.0000 0.925   0.001 ***
+    ## ocimene     0.9818 1.0000 0.991   5e-04 ***
+    ## a_terpineol 0.8562 1.0000 0.925   5e-04 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  1 
     ##              A      B  stat p.value    
-    ## abietic 0.9136 0.9024 0.908   0.001 ***
+    ## abietic 0.9136 0.9024 0.908   5e-04 ***
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  4 
     ##                     A      B  stat p.value    
-    ## levopiramic    0.9686 0.9180 0.943   0.001 ***
-    ## neoabietic     0.9478 0.8852 0.916   0.001 ***
-    ## palustric      0.9442 0.7869 0.862   0.001 ***
-    ## dehydroabietic 1.0000 0.7377 0.859   0.001 ***
+    ## levopiramic    0.9686 0.9180 0.943   5e-04 ***
+    ## neoabietic     0.9478 0.8852 0.916   5e-04 ***
+    ## palustric      0.9442 0.7869 0.862   5e-04 ***
+    ## dehydroabietic 1.0000 0.7377 0.859   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -513,18 +518,18 @@ indic_post("MGR", "rust_ctrl")
     ## 
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
-    ## ocimene     0.9735 1.0000 0.987   0.001 ***
-    ## a_terpineol 0.8177 1.0000 0.904   0.001 ***
+    ## ocimene     0.9735 1.0000 0.987   5e-04 ***
+    ## a_terpineol 0.8177 1.0000 0.904   5e-04 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
-    ## palustric 0.9671 1.0000 0.983   0.001 ***
-    ## abietic   0.9470 0.9000 0.923   0.002 ** 
+    ## palustric 0.9671 1.0000 0.983   5e-04 ***
+    ## abietic   0.9470 0.9000 0.923   5e-04 ***
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
-    ## neoabietic  0.9907 0.9667 0.979   0.001 ***
-    ## levopiramic 0.9807 0.9333 0.957   0.001 ***
+    ## neoabietic  0.9907 0.9667 0.979   5e-04 ***
+    ## levopiramic 0.9807 0.9333 0.957   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -579,9 +584,9 @@ indic_post("QDR", "rust_inoc")
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  3 
     ##                  A      B  stat p.value    
-    ## ocimene     0.9195 0.9780 0.948   0.001 ***
-    ## a_terpineol 0.9054 0.9560 0.930   0.001 ***
-    ## abietic     0.9941 0.8022 0.893   0.001 ***
+    ## ocimene     0.9195 0.9780 0.948   5e-04 ***
+    ## a_terpineol 0.9054 0.9560 0.930   5e-04 ***
+    ## abietic     0.9941 0.8022 0.893   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -613,9 +618,9 @@ indic_post("susceptible", "rust_inoc")
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  3 
     ##                A      B  stat p.value    
-    ## ocimene   0.9673 1.0000 0.984   0.001 ***
-    ## palustric 0.9375 0.9833 0.960   0.001 ***
-    ## abietic   0.9805 0.7833 0.876   0.001 ***
+    ## ocimene   0.9673 1.0000 0.984   5e-04 ***
+    ## palustric 0.9375 0.9833 0.960   5e-04 ***
+    ## abietic   0.9805 0.7833 0.876   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -645,12 +650,12 @@ indic_post("MGR", "rust_inoc")
     ##  List of species associated to each combination: 
     ## 
     ##  Group EMF+FFE  #sps.  1 
-    ##              A      B  stat p.value  
-    ## abietic 0.8550 0.8947 0.875   0.011 *
+    ##              A      B  stat p.value   
+    ## abietic 0.8550 0.8947 0.875  0.0095 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
-    ## ocimene 0.977 1.000 0.988   0.001 ***
+    ## ocimene 0.977 1.000 0.988   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
