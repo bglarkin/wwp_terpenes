@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 28 June, 2023
+Last updated: 25 July, 2023
 
 - [Description](#description)
 - [Package and library installation](#package-and-library-installation)
@@ -22,8 +22,8 @@ Last updated: 28 June, 2023
     - [Rust-inoculated seedlings](#rust-inoculated-seedlings)
     - [Plot of indicators and confidence
       intervals](#plot-of-indicators-and-confidence-intervals-2)
-    - [Heatmap of all terpenes and
-      indicators](#heatmap-of-all-terpenes-and-indicators)
+    - [Heatmaps of terpenes and
+      indicators](#heatmaps-of-terpenes-and-indicators)
 - [References](#references)
 
 # Description
@@ -168,6 +168,7 @@ arguments in the following functions.
 
 ``` r
 indVal_prerust_ci <- data.frame()
+indVal_pre_pvals <- data.frame()
 indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
@@ -210,6 +211,21 @@ indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
         pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
         mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
         pivot_wider(names_from = parameter, values_from = value)
+    )
+  
+  indVal_pre_pvals <<-
+    rbind(indVal_pre_pvals, 
+          indVal$sign %>% 
+            rownames_to_column(var = "compound") %>% 
+            mutate(resistance_class = rc,
+                   assessment = a,
+                   p_val = case_match(p.value, NA ~ 1, .default = p.value),
+                   corr_p_val = p.adjust(p_val, method = "BH")) %>% 
+            filter(compound %in% ind_compounds, p.value <= 0.05) %>% 
+            pivot_longer(cols = 2:5, names_to = "treatment", values_to = "present") %>% 
+            filter(present == 1, corr_p_val <= 0.05) %>% 
+            mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
+            select(-index, -present)
     )
   
   print(rc)
@@ -519,7 +535,7 @@ indic_post("MGR", "rust_ctrl")
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   5e-04 ***
-    ## a_terpineol 0.8177 1.0000 0.904   1e-03 ***
+    ## a_terpineol 0.8177 1.0000 0.904   5e-04 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
@@ -651,7 +667,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.006 **
+    ## abietic 0.8550 0.8947 0.875   0.005 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -689,7 +705,9 @@ the plot.
 
 ![](terpenes_indicators_files/figure-gfm/indVal_rustinoc_plot-1.png)<!-- -->
 
-### Heatmap of all terpenes and indicators
+### Heatmaps of terpenes and indicators
+
+#### Post-rust assessment
 
 The following figure shows variation in terpene masses across
 treatments, resistance classes, and post-rust assessments. To create the
@@ -725,7 +743,7 @@ produced by `strassoc()` aren’t limited by the lack of p value
 correction and produce a better visual display of differences among
 treatments.
 
-**Data wrangling for heatmap**
+**Data wrangling for heatmaps**
 
 Data wrangling is shown here because much of the source data is modified
 to produce the figure.
@@ -764,6 +782,40 @@ terpene_heatmap_data <-
 ```
 
 ![](terpenes_indicators_files/figure-gfm/indVal_heatmap_plot-1.png)<!-- -->
+
+#### Pre-rust assessment
+
+Included for a supplemental figure
+
+``` r
+terpene_pre_heatmap_data <- 
+  data$terpene %>%
+  filter(mass_type == "dw", assessment == "pre_rust") %>% 
+  mutate(
+    treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
+  group_by(treatment, resistance_class, class, compound) %>% 
+  summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
+  # Terpene masses are averaged and log-transformed in cells to improve visual interpretation.
+  left_join(
+    indVal_pre_pvals %>%
+      mutate(sig = 0.5),
+    # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
+    by = join_by(treatment, resistance_class, compound)
+  ) %>% 
+  mutate(
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
+    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    compound = factor(compound)
+  ) %>% 
+  group_by(class) %>%
+  mutate(mass_scl = mass/max(mass)) %>%
+  # Raw terpene masses vary among terpene classes, making differences between cells hard to see. 
+  # Log-transformed averages are scaled within each terpene class to improve visual representation.
+  ungroup()
+```
+
+![](terpenes_indicators_files/figure-gfm/indVal_pre_heatmap_plot-1.png)<!-- -->
 
 # References
 

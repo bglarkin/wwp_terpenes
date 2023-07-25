@@ -76,6 +76,7 @@ sapply(data, function(x) head(x, 2))
 #' ## Pre-rust function 
 #+ pre-rust function
 indVal_prerust_ci <- data.frame()
+indVal_pre_pvals <- data.frame()
 indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
   df <- data$terpene %>%
     filter(mass_type == "dw",
@@ -118,6 +119,21 @@ indic_pre <- function(rc, a="pre_rust", p=1999, nb=1999) {
         pivot_longer(cols = Control:FFE.EMF, names_to = "treatment") %>% 
         mutate(treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE.EMF" ~ "MIX", .default = treatment)) %>% 
         pivot_wider(names_from = parameter, values_from = value)
+    )
+  
+  indVal_pre_pvals <<-
+    rbind(indVal_pre_pvals, 
+          indVal$sign %>% 
+            rownames_to_column(var = "compound") %>% 
+            mutate(resistance_class = rc,
+                   assessment = a,
+                   p_val = case_match(p.value, NA ~ 1, .default = p.value),
+                   corr_p_val = p.adjust(p_val, method = "BH")) %>% 
+            filter(compound %in% ind_compounds, p.value <= 0.05) %>% 
+            pivot_longer(cols = 2:5, names_to = "treatment", values_to = "present") %>% 
+            filter(present == 1, corr_p_val <= 0.05) %>% 
+            mutate(treatment = case_match(treatment, "s.EMF" ~ "SUIL", "s.FFE" ~ "META", "s.FFE+EMF" ~ "MIX", "s.Control" ~ "Control")) %>% 
+            select(-index, -present)
     )
   
   print(rc)
@@ -339,7 +355,9 @@ indVal_postrust_ci %>%
   theme_bgl +
   theme(legend.position = "none")
 #' 
-#' ### Heatmap of all terpenes and indicators
+#' ### Heatmaps of terpenes and indicators
+#' #### Post-rust assessment
+#' 
 #' The following figure shows variation in terpene masses across treatments, resistance classes, 
 #' and post-rust assessments. To create the heatmap, terpene masses for technical replicates were 
 #' averaged within each combination of experimental factors. Then, these averages were log-transformed
@@ -366,7 +384,7 @@ indVal_postrust_ci %>%
 #' but the confidence intervals produced by `strassoc()` aren't limited by the lack of p value correction
 #' and produce a better visual display of differences among treatments. 
 #' 
-#' **Data wrangling for heatmap**
+#' **Data wrangling for heatmaps**
 #' 
 #' Data wrangling is shown here because much of the source data is modified to produce the figure. 
 #' 
@@ -452,7 +470,7 @@ terpene_heatmap_2x <-
   theme_np +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 #+ indVal_heatmap_plot_pdf,echo=FALSE
-ggsave(filename = "terpene_heatmap.pdf",
+ggsave(filename = "assessment2_terpene_heatmap.pdf",
        plot = terpene_heatmap_2x,
        device = "pdf",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
@@ -460,7 +478,7 @@ ggsave(filename = "terpene_heatmap.pdf",
        height = 15.5*2,
        units = "cm")
 #+ indVal_heatmap_plot_eps,echo=FALSE
-ggsave(filename = "terpene_heatmap.eps",
+ggsave(filename = "assessment2_terpene_heatmap.eps",
        plot = terpene_heatmap_2x,
        device = "eps",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
@@ -468,8 +486,113 @@ ggsave(filename = "terpene_heatmap.eps",
        height = 15.5*2,
        units = "cm")
 #+ indVal_heatmap_plot_tiff,echo=FALSE
-ggsave(filename = "terpene_heatmap.tiff",
+ggsave(filename = "assessment2_terpene_heatmap.tiff",
        plot = terpene_heatmap_2x,
+       device = "tiff",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 17.35*2,
+       height = 15.5*2,
+       dpi = 600,
+       units = "cm")
+#' 
+#' #### Pre-rust assessment
+#' Included for a supplemental figure
+#' 
+#+ indVal_pre_heatmap_data
+terpene_pre_heatmap_data <- 
+  data$terpene %>%
+  filter(mass_type == "dw", assessment == "pre_rust") %>% 
+  mutate(
+    treatment = case_match(treatment, "EMF" ~ "SUIL", "FFE" ~ "META", "FFE+EMF" ~ "MIX", .default = treatment)) %>% 
+  group_by(treatment, resistance_class, class, compound) %>% 
+  summarize(mass = log1p(mean(mass)), .groups = "drop") %>%
+  # Terpene masses are averaged and log-transformed in cells to improve visual interpretation.
+  left_join(
+    indVal_pre_pvals %>%
+      mutate(sig = 0.5),
+    # A continuous placeholder variable must be created so ggplot2 can draw significance boxes later.
+    by = join_by(treatment, resistance_class, compound)
+  ) %>% 
+  mutate(
+    resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
+    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    compound = factor(compound)
+  ) %>% 
+  group_by(class) %>%
+  mutate(mass_scl = mass/max(mass)) %>%
+  # Raw terpene masses vary among terpene classes, making differences between cells hard to see. 
+  # Log-transformed averages are scaled within each terpene class to improve visual representation.
+  ungroup()
+#+ indVal_pre_heatmap_labels,echo=FALSE
+y_pre_breaks <- levels(terpene_pre_heatmap_data$compound)
+y_pre_labels_pre <- levels(terpene_pre_heatmap_data$compound)
+y_pre_labels_pre[c(1,2,3,5,6,7,10,12,13,14,22,23)] <- 
+  c(expression(paste(alpha, "-pinene")),
+    expression(paste(alpha, "-terpinene")),
+    expression(paste(alpha, "-terpineol")),
+    expression(paste(beta, "-phelandrene")),
+    expression(paste(beta, "-pinene")),
+    expression(paste("bornyl acetate")),
+    expression(paste(delta, "-cadinene")),
+    expression(paste("geranyl acetate")),
+    expression(paste("germacrene-D")),
+    expression(paste("germacrene-D-4-ol")),
+    expression(paste(delta, "-3-carene")),
+    expression(paste(gamma, "-terpinene"))
+  )
+y_pre_labels <- parse(text = y_pre_labels_pre)
+#+ newPhyt_style_copy,echo=FALSE
+source("gg_style_newPhyt.txt")
+#+ indVal_pre_heatmap_script,echo=FALSE
+terpene_pre_heatmap <- 
+  ggplot(terpene_pre_heatmap_data, aes(x = treatment, y = compound)) +
+  facet_grid(class ~ resistance_class, scales = "free", space = "free") +
+  geom_tile(aes(fill = mass_scl)) +
+  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
+  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray15") +
+  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_y_discrete(breaks = y_pre_breaks, label = y_pre_labels, limits = rev) +
+  labs(x = "", y = "") +
+  guides(linewidth = "none") +
+  theme_np +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#+ indVal_pre_heatmap_plot,echo=FALSE,fig.dim=c(8,7)
+terpene_pre_heatmap
+#+ newPhyt_style_2x_copy,echo=FALSE
+source("gg_style_newPhyt_2x.txt")
+#+ indVal_pre_heatmap_script_2x,echo=FALSE
+terpene_pre_heatmap_2x <- 
+  ggplot(terpene_pre_heatmap_data, aes(x = treatment, y = compound)) +
+  facet_grid(class ~ resistance_class, scales = "free", space = "free") +
+  geom_tile(aes(fill = mass_scl)) +
+  geom_tile(aes(linewidth = sig), color = "black", fill = NA) +
+  scale_fill_gradient(name = "Terpene\nconcentration\n(relativized,\nscaled)\n", low = "white", high = "gray15") +
+  scale_linewidth(range = c(0.7, 0.7)) +
+  scale_y_discrete(breaks = y_pre_breaks, label = y_pre_labels, limits = rev) +
+  labs(x = "", y = "") +
+  guides(linewidth = "none") +
+  theme_np +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+#+ indVal_pre_heatmap_plot_pdf,echo=FALSE
+ggsave(filename = "assessment1_terpene_heatmap.pdf",
+       plot = terpene_pre_heatmap_2x,
+       device = "pdf",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 17.35*2,
+       height = 15.5*2,
+       units = "cm")
+#+ indVal_pre_heatmap_plot_eps,echo=FALSE
+ggsave(filename = "assessment1_terpene_heatmap.eps",
+       plot = terpene_pre_heatmap_2x,
+       device = "eps",
+       path = paste0(getwd(), "/terpenes_indicators_files/"),
+       width = 17.35*2,
+       height = 15.5*2,
+       units = "cm")
+#+ indVal_pre_heatmap_plot_tiff,echo=FALSE
+ggsave(filename = "assessment1_terpene_heatmap.tiff",
+       plot = terpene_pre_heatmap_2x,
        device = "tiff",
        path = paste0(getwd(), "/terpenes_indicators_files/"),
        width = 17.35*2,
