@@ -546,7 +546,7 @@ indic_post("MGR", "rust_ctrl")
     ##                       A      B  stat p.value    
     ## neoabietic       0.9907 0.9667 0.979  0.0005 ***
     ## levopiramic      0.9807 0.9333 0.957  0.0005 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856  0.0425 *  
+    ## sandaracopiramic 0.8450 0.8667 0.856  0.0470 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -668,7 +668,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875  0.0065 **
+    ## abietic 0.8550 0.8947 0.875  0.0045 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -784,6 +784,23 @@ terpene_heatmap_data <-
 
 ![](terpenes_indicators_files/figure-gfm/indVal_heatmap_plot-1.png)<!-- -->
 
+**Figure, Sampling Period 2:** Heatmap of 26 terpenes identified in
+foliar tissue of P. monticola with quantitative disease resistance,
+susceptibility to disease, or major gene resistance inoculated with
+fungal symbionts. Vertical panels represent Pathogen- and Pathogen+
+treatments in all resistance classes at collection two. Horizontal
+panels are separated according to terpene class. Shading in each cell
+relates to terpene concentration, which is an average of individual
+seedling values in each cell (n = 9-30) . Averages were log-transformed
+improve contrast and enhance visual interpretation of the figure.
+Log-transformed values were then divided by the maximum value of each
+terpene class to relativize the color gradient across terpene classes,
+again to enhance visual interpretation of the figure. Analysis and
+significance tests were done on untransformed data as described in the
+methods. Cells with solid black outlines indicate significant
+associations at p \< 0.05 (values corrected for multiple tests) as
+determined by indicator species analysis.
+
 #### Pre-rust assessment
 
 Included for a supplemental figure
@@ -817,6 +834,23 @@ terpene_pre_heatmap_data <-
 ```
 
 ![](terpenes_indicators_files/figure-gfm/indVal_pre_heatmap_plot-1.png)<!-- -->
+
+**Figure, Sampling Period 1:** Heatmap of 23 terpenes identified in
+foliar tissue of P. monticola with quantitative disease resistance,
+susceptibility to disease, or major gene resistance inoculated with
+fungal symbionts. Vertical panels represent Pathogen- and Pathogen+
+treatments in all resistance classes at sampling period 2. Horizontal
+panels are separated according to terpene class. Shading in each cell
+relates to terpene concentration, which is an average of individual
+seedling values in each cell (n = 8-48) . Averages were log-transformed
+improve contrast and enhance visual interpretation of the figure.
+Log-transformed values were then divided by the maximum value of each
+terpene class to relativize the color gradient across terpene classes,
+again to enhance visual interpretation of the figure. Analysis and
+significance tests were done on untransformed data as described in the
+methods. Cells with solid black outlines indicate significant
+associations at p \< 0.05 (values corrected for multiple tests) as
+determined by indicator species analysis.
 
 # References
 

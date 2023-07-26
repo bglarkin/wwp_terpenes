@@ -454,6 +454,19 @@ terpene_heatmap <-
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 #+ indVal_heatmap_plot,echo=FALSE,fig.dim=c(8,7)
 terpene_heatmap
+#' **Figure, Sampling Period 2:** Heatmap of 26 terpenes identified in foliar tissue of P. monticola 
+#' with quantitative disease resistance, susceptibility to disease, or major gene resistance 
+#' inoculated with fungal symbionts. Vertical panels represent Pathogen- and Pathogen+ treatments 
+#' in all resistance classes at collection two. Horizontal panels are separated according to 
+#' terpene class. Shading in each cell relates to terpene concentration, which is an average 
+#' of individual seedling values in each cell (n = 9-30) . Averages were log-transformed improve 
+#' contrast and enhance visual interpretation of the figure. Log-transformed values were then 
+#' divided by the maximum value of each terpene class to relativize the color gradient across 
+#' terpene classes, again to enhance visual interpretation of the figure. Analysis and 
+#' significance tests were done on untransformed data as described in the methods. Cells 
+#' with solid black outlines indicate significant associations at p < 0.05 (values corrected 
+#' for multiple tests) as determined by indicator species analysis.
+#' 
 #+ newPhyt_style_2x,echo=FALSE
 source("gg_style_newPhyt_2x.txt")
 #+ indVal_heatmap_script_2x,echo=FALSE
@@ -559,6 +572,19 @@ terpene_pre_heatmap <-
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 #+ indVal_pre_heatmap_plot,echo=FALSE,fig.dim=c(8,7)
 terpene_pre_heatmap
+#' **Figure, Sampling Period 1:** Heatmap of 23 terpenes identified in foliar tissue of P. monticola 
+#' with quantitative disease resistance, susceptibility to disease, or major gene resistance 
+#' inoculated with fungal symbionts. Vertical panels represent Pathogen- and Pathogen+ 
+#' treatments in all resistance classes at sampling period 2. Horizontal panels are separated 
+#' according to terpene class. Shading in each cell relates to terpene concentration, which is 
+#' an average of individual seedling values in each cell (n = 8-48) . Averages were log-transformed 
+#' improve contrast and enhance visual interpretation of the figure. Log-transformed values were then 
+#' divided by the maximum value of each terpene class to relativize the color gradient across terpene 
+#' classes, again to enhance visual interpretation of the figure. Analysis and significance tests 
+#' were done on untransformed data as described in the methods. Cells with solid black outlines 
+#' indicate significant associations at p < 0.05 (values corrected for multiple tests) as 
+#' determined by indicator species analysis.
+#' 
 #+ newPhyt_style_2x_copy,echo=FALSE
 source("gg_style_newPhyt_2x.txt")
 #+ indVal_pre_heatmap_script_2x,echo=FALSE
