@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 26 July, 2023
+Last updated: 13 October, 2023
 
 - [Description](#description)
 - [Package and library installation](#package-and-library-installation)
@@ -525,28 +525,27 @@ indic_post("MGR", "rust_ctrl")
     ##  Significance level (alpha): 0.05
     ## 
     ##  Total number of species: 26
-    ##  Selected number of species: 7 
+    ##  Selected number of species: 6 
     ##  Number of species associated to 1 group: 0 
     ##  Number of species associated to 2 groups: 4 
-    ##  Number of species associated to 3 groups: 3 
+    ##  Number of species associated to 3 groups: 2 
     ## 
     ##  List of species associated to each combination: 
     ## 
     ##  Group Control+FFE+EMF  #sps.  2 
     ##                  A      B  stat p.value    
     ## ocimene     0.9735 1.0000 0.987   5e-04 ***
-    ## a_terpineol 0.8177 1.0000 0.904   5e-04 ***
+    ## a_terpineol 0.8177 1.0000 0.904   1e-03 ***
     ## 
     ##  Group EMF+FFE+EMF  #sps.  2 
     ##                A      B  stat p.value    
     ## palustric 0.9671 1.0000 0.983   5e-04 ***
     ## abietic   0.9470 0.9000 0.923   5e-04 ***
     ## 
-    ##  Group EMF+FFE+FFE+EMF  #sps.  3 
-    ##                       A      B  stat p.value    
-    ## neoabietic       0.9907 0.9667 0.979  0.0005 ***
-    ## levopiramic      0.9807 0.9333 0.957  0.0005 ***
-    ## sandaracopiramic 0.8450 0.8667 0.856  0.0470 *  
+    ##  Group EMF+FFE+FFE+EMF  #sps.  2 
+    ##                  A      B  stat p.value    
+    ## neoabietic  0.9907 0.9667 0.979   5e-04 ***
+    ## levopiramic 0.9807 0.9333 0.957   5e-04 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -668,7 +667,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875  0.0045 **
+    ## abietic 0.8550 0.8947 0.875   0.006 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -772,7 +771,7 @@ terpene_heatmap_data <-
     assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
-    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
   ) %>% 
   group_by(class) %>%
@@ -823,7 +822,7 @@ terpene_pre_heatmap_data <-
   mutate(
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
-    class = case_match(class, "diterpene" ~ "Diterpene", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
+    class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
   ) %>% 
   group_by(class) %>%
