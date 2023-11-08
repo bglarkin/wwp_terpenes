@@ -409,6 +409,7 @@ terpene_heatmap_data <-
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    resistance_class = factor(resistance_class, ordered = TRUE, levels = c("QDR", "Susceptible", "MGR")),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
@@ -528,6 +529,7 @@ terpene_pre_heatmap_data <-
   ) %>% 
   mutate(
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    resistance_class = factor(resistance_class, ordered = TRUE, levels = c("QDR", "Susceptible", "MGR")),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
@@ -630,3 +632,4 @@ ggsave(filename = "assessment1_terpene_heatmap.tiff",
 #+ citations
 print(citation("indicspecies"), bibtex = FALSE)
 print(citation("tidyverse"), bibtex = FALSE)
+

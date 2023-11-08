@@ -3,7 +3,7 @@ resistance classes
 ================
 Beau Larkin
 
-Last updated: 13 October, 2023
+Last updated: 08 November, 2023
 
 - [Description](#description)
 - [Package and library installation](#package-and-library-installation)
@@ -121,11 +121,12 @@ sapply(data, function(x) head(x, 2))
     ## 
     ## $terpene
     ## # A tibble: 2 × 11
-    ##   tree_ID  year treatment assessment block family class compound mass_type  mass
-    ##     <dbl> <dbl> <chr>     <chr>      <dbl> <chr>  <chr> <chr>    <chr>     <dbl>
-    ## 1    1002  2019 FFE       pre_rust       1 ENDO-… dite… dehydro… dw        0.421
-    ## 2    1002  2019 FFE       pre_rust       1 ENDO-… dite… levopir… dw        8.63 
-    ## # ℹ 1 more variable: resistance_class <chr>
+    ##   tree_ID  year treat…¹ asses…² block family class compo…³ mass_…⁴  mass resis…⁵
+    ##     <dbl> <dbl> <chr>   <chr>   <dbl> <chr>  <chr> <chr>   <chr>   <dbl> <chr>  
+    ## 1    1002  2019 FFE     pre_ru…     1 ENDO-… dite… dehydr… dw      0.421 suscep…
+    ## 2    1002  2019 FFE     pre_ru…     1 ENDO-… dite… levopi… dw      8.63  suscep…
+    ## # … with abbreviated variable names ¹​treatment, ²​assessment, ³​compound,
+    ## #   ⁴​mass_type, ⁵​resistance_class
     ## 
     ## $tree_height
     ## # A tibble: 2 × 4
@@ -147,9 +148,9 @@ sapply(data, function(x) head(x, 2))
     ##     <dbl>     <dbl> <dbl> <dbl> <dbl> <chr>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1    1001      3400    25     4     6 Yes        1    20     4     3     1     2
     ## 2    1002      3400    43     4     7 Yes        6    29     4     5     1     3
-    ## # ℹ 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>, dm4 <dbl>,
-    ## #   sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>, bi3 <dbl>,
-    ## #   nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
+    ## # … with 16 more variables: nc5 <dbl>, pbr5 <dbl>, br5 <dbl>, ss5 <dbl>,
+    ## #   dm4 <dbl>, sv4 <dbl>, ss4 <dbl>, dm3 <dbl>, sv3 <dbl>, vig3 <dbl>,
+    ## #   bi3 <dbl>, nc3 <dbl>, pbr3 <dbl>, br3 <dbl>, ss3 <dbl>, ht1 <dbl>
 
 # Functions
 
@@ -667,7 +668,7 @@ indic_post("MGR", "rust_inoc")
     ## 
     ##  Group EMF+FFE  #sps.  1 
     ##              A      B  stat p.value   
-    ## abietic 0.8550 0.8947 0.875   0.006 **
+    ## abietic 0.8550 0.8947 0.875  0.0075 **
     ## 
     ##  Group EMF+FFE+FFE+EMF  #sps.  1 
     ##             A     B  stat p.value    
@@ -770,6 +771,7 @@ terpene_heatmap_data <-
   mutate(
     assessment = case_match(assessment, "rust_ctrl" ~ "Pathogen-", "rust_inoc" ~ "Pathogen+", .default = assessment),
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    resistance_class = factor(resistance_class, ordered = TRUE, levels = c("QDR", "Susceptible", "MGR")),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
@@ -821,6 +823,7 @@ terpene_pre_heatmap_data <-
   ) %>% 
   mutate(
     resistance_class = case_match(resistance_class, "susceptible" ~ "Susceptible", .default = resistance_class),
+    resistance_class = factor(resistance_class, ordered = TRUE, levels = c("QDR", "Susceptible", "MGR")),
     treatment = factor(treatment, levels = c("Control", "SUIL", "META", "MIX"), ordered = TRUE),
     class = case_match(class, "diterpene" ~ "Diterpene acids", "monoterpene" ~ "Monoterpene", "sesquiterpene" ~ "Sesquiterpene"),
     compound = factor(compound)
@@ -857,11 +860,12 @@ determined by indicator species analysis.
 print(citation("indicspecies"), bibtex = FALSE)
 ```
 
+    ## 
     ## To cite 'indicspecies' package in publications use:
     ## 
-    ##   De Cáceres M, Legendre P (2009). "Associations between species and
-    ##   groups of sites: indices and statistical inference." _Ecology_, *90*,
-    ##   3566-3574. doi:10.1890/08-1823.1 <https://doi.org/10.1890/08-1823.1>.
+    ##   De Caceres, M., Legendre, P. (2009). Associations between species and
+    ##   groups of sites: indices and statistical inference. Ecology, URL
+    ##   http://sites.google.com/site/miqueldecaceres/
     ## 
     ## Thank you for using 'indicspecies'
 
@@ -869,6 +873,7 @@ print(citation("indicspecies"), bibtex = FALSE)
 print(citation("tidyverse"), bibtex = FALSE)
 ```
 
+    ## 
     ## To cite package 'tidyverse' in publications use:
     ## 
     ##   Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
