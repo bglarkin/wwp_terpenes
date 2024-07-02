@@ -630,6 +630,17 @@ ggsave(filename = "assessment1_terpene_heatmap.tiff",
 #' 
 #' ## Unified results
 #' 
+
+
+data$terpene %>% 
+  filter(mass_type == "dw",
+         compound %in% indVal_pvals$compound) %>% 
+  ggplot(aes(x = treatment, y = log1p(mass))) +
+  facet_grid(rows = vars(compound), cols = vars(assessment), scales = "free_y") +
+  geom_boxplot(aes(fill = resistance_class))
+
+
+
 #' 
 #' # References
 #+ citations
