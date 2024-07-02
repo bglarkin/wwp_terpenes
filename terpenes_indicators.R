@@ -628,6 +628,9 @@ ggsave(filename = "assessment1_terpene_heatmap.tiff",
        dpi = 600,
        units = "cm")
 #' 
+#' ## Unified results
+#' 
+#' 
 #' # References
 #+ citations
 print(citation("indicspecies"), bibtex = FALSE)
