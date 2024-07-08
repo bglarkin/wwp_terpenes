@@ -628,13 +628,19 @@ ggsave(filename = "assessment1_terpene_heatmap.tiff",
        dpi = 600,
        units = "cm")
 #' 
-#' ## Unified results
+#' ## Unified results - Diterpenes
 #' 
-
+#' WAITING FOR NEW IDEAS FROM LORINDA... 2024-07-07
 
 data$terpene %>% 
   filter(mass_type == "dw",
-         compound %in% indVal_pvals$compound) %>% 
+         class == "diterpene") %>% 
+  write_csv("~/Desktop/diterpenes.csv")
+
+data$terpene %>% 
+  filter(mass_type == "dw",
+         compound %in% indVal_pvals$compound,
+         class == "diterpene") %>% 
   ggplot(aes(x = treatment, y = log1p(mass))) +
   facet_grid(rows = vars(compound), cols = vars(assessment), scales = "free_y") +
   geom_boxplot(aes(fill = resistance_class))
